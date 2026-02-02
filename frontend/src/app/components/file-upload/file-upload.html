@@ -1,0 +1,34 @@
+<div class="upload-wrapper">
+
+  <div class="drop-zone" appDragDrop (fileDropped)="onFileDropped($event)">
+    <div class="icon">☁️</div>
+    <h3>Drag & Drop your PDF here</h3>
+    <p>or</p>
+    <label for="fileInput" class="browse-btn">Browse Files</label>
+    <input type="file" id="fileInput" (change)="onFileSelected($event)" accept="application/pdf" hidden>
+  </div>
+
+  @if (fileName()) {
+    <div class="card file-info-card">
+      <div class="card-header">📄 Uploaded Document</div>
+      <div class="card-body">
+        <p><strong>Name:</strong> {{ fileName() }}</p>
+        <p><strong>Size:</strong> {{ fileSize() }}</p>
+        <p><strong>Status:</strong>
+          @if(isLoading()) { <span class="badge loading">Analyzing...</span> }
+          @else { <span class="badge success">Ready</span> }
+        </p>
+      </div>
+    </div>
+  }
+
+  @if (summary()) {
+    <div class="card summary-card">
+      <div class="card-header">✨ AI Summary (Összefoglaló)</div>
+      <div class="card-body ai-content">
+        <markdown [data]="summary()"></markdown>
+      </div>
+    </div>
+  }
+
+</div>

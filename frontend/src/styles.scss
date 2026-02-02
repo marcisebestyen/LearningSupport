@@ -1,1 +1,12 @@
-/* You can add global styles to this file, and also import other style files */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.ai-content p { margin-bottom: 1rem; }
+.ai-content strong { color: #2c3e50; }
+.ai-content ul { padding-left: 20px; margin-bottom: 1rem; }
+.ai-content li { margin-bottom: 0.5rem; }

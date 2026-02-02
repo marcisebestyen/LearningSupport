@@ -1,0 +1,76 @@
+.upload-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.drop-zone {
+  border: 3px dashed #cbd5e0;
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  background: white;
+  transition: all 0.3s ease;
+  color: #718096;
+
+  &.file-over {
+    border-color: #3498db;
+    background-color: #ebf8ff;
+    transform: scale(1.02);
+  }
+
+  .icon { font-size: 3rem; margin-bottom: 1rem; }
+  h3 { margin: 0; color: #2d3748; }
+
+  .browse-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 10px 25px;
+    background: #3498db;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    &:hover { background: #2980b9; }
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-top: 2rem;
+  overflow: hidden;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.card-header {
+  background: #f7fafc;
+  padding: 15px 20px;
+  border-bottom: 1px solid #edf2f7;
+  font-weight: bold;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.card-body { padding: 20px; }
+
+.ai-content {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #2d3748;
+  font-size: 1.05rem;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+.badge.loading { background: #fff3cd; color: #856404; }
+.badge.success { background: #d4edda; color: #155724; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
