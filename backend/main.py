@@ -19,7 +19,7 @@ if not GOOGLE_API_KEY:
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 try:
     with engine.connect() as connection:
@@ -66,8 +66,16 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse PDF: {str(e)}")
 
-    prompt = f"Please provide a concise and structured summary of the following document for a student:\n\n{full_text[:30000]}"
+    prompt = f"""
+        Please analyze the following document text. 
+        Regardless of the document's original language (English, Hungarian, etc.), 
+        you must output the summary explicitly in HUNGARIAN (Magyarul).
 
+        Structure the summary clearly for a student.
+
+        Document Text:
+        {full_text[:30000]}
+        """
     try:
         response = model.generate_content(prompt)
         summary_text = response.text

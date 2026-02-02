@@ -1,13 +1,17 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import urllib.parse
 
-DB_USER = "adminuser"
-DB_PASSWORD = urllib.parse.quote_plus("yourStrongPassword123!")
-DB_HOST = "127.0.0.1"
-DB_NAME = "learning_db"
+load_dotenv()
 
-DB_PORT = "5432"
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = urllib.parse.quote_plus(os.getenv("DB_PASSWORD"))
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+
+DB_PORT = os.getenv("DB_PORT")
 
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
