@@ -1,8 +1,10 @@
-import {Component, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {HttpClient} from '@angular/common/http';
-import {DragDropDirective} from '../../directives/drag-drop';
-import {MarkdownModule} from 'ngx-markdown';
+import { Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { DragDropDirective } from '../../directives/drag-drop';
+import { MarkdownModule } from 'ngx-markdown';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-file-upload',
@@ -17,9 +19,9 @@ export class FileUploadComponent {
   uploadStatus = signal<string>('');
   summary = signal<string>('');
   isLoading = signal<boolean>(false);
+  history = signal<any[]>([]);
 
-  constructor(private http: HttpClient) {
-  }
+  constructor(private http: HttpClient, private auth: AuthService, private router: Router) { }
 
   onFileDropped(file: File) {
     this.handleFile(file);
@@ -52,13 +54,20 @@ export class FileUploadComponent {
         next: (response) => {
           this.isLoading.set(false);
           this.uploadStatus.set('Done!');
-          this.summary.set(response.summary);
+          this.router.navigate(['/history']);
         },
         error: (error) => {
           this.isLoading.set(false);
           this.uploadStatus.set('Error uploading file!');
+
+          if (error.status === 401) {
+            alert("Session expired. Please log in again.");
+            this.router.navigate(['/login']);
+          }
+
           console.error(error);
         }
       });
+
   }
 }

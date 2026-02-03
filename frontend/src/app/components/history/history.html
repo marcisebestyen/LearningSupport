@@ -1,0 +1,39 @@
+<div class="history-layout">
+
+  <div class="history-list">
+    <h3>Previous Uploads</h3>
+
+    @if (history().length === 0) {
+      <p class="empty-msg">No documents found.</p>
+    }
+
+    @for (item of history(); track item.id) {
+      <div
+        class="history-item"
+        [class.selected]="selectedDocId() === item.id"
+        (click)="selectDoc(item)">
+        <div class="doc-icon">📄</div>
+        <div class="doc-info">
+          <span class="filename">{{ item.filename }}</span>
+          <span class="date">{{ item.upload_date | date:'shortDate' }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="history-content">
+    @if (selectedSummary()) {
+      <div class="summary-card">
+        <h2>Summary: {{ selectedFilename() }}</h2>
+        <div class="markdown-body">
+          <markdown [data]="selectedSummary()"></markdown>
+        </div>
+      </div>
+    } @else {
+      <div class="placeholder">
+        <span class="icon">👈</span>
+        <p>Select a document from the list to view its summary.</p>
+      </div>
+    }
+  </div>
+</div>

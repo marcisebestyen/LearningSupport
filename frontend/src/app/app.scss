@@ -1,0 +1,140 @@
+$sidebar-bg: #1e1e2d;
+$sidebar-hover: #2b2b40;
+$accent-color: #3699ff;
+$text-light: #ffffff;
+$text-muted: #a1a5b7;
+$bg-light: #f3f6f9;
+
+:host {
+  display: block;
+  height: 100vh;
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 260px;
+  background: $sidebar-bg;
+  color: $text-light;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+  z-index: 10;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 3rem;
+    padding-left: 0.5rem;
+
+    .logo-icon { font-size: 1.8rem; }
+    h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: $text-light; }
+  }
+
+  .nav-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1; // Pushes footer down
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: $text-muted;
+      transition: all 0.2s ease;
+      font-weight: 500;
+
+      .icon { font-size: 1.2rem; }
+
+      &:hover {
+        background: $sidebar-hover;
+        color: $text-light;
+      }
+
+      &.active {
+        background: $accent-color;
+        color: $text-light;
+        box-shadow: 0 4px 12px rgba(54, 153, 255, 0.3);
+      }
+    }
+  }
+
+  .sidebar-footer {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1rem;
+
+    .logout-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid rgba(255,100,100,0.3);
+      color: #ff6b6b;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover { background: rgba(255,100,100,0.1); }
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  background: $bg-light;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.top-bar {
+  background: white;
+  height: 64px;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ebedf3;
+
+  h1 { font-size: 1.25rem; color: #181c32; margin: 0; font-weight: 600; }
+
+  .user-status {
+    font-size: 0.9rem;
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #ccc;
+      border-radius: 50%;
+      &.online { background: #1bc5bd; }
+    }
+  }
+}
+
+.page-container {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto; // Enables scrolling within the main area
+}

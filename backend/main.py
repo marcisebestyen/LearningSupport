@@ -6,9 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from dotenv import load_dotenv
-
-from database import engine, get_db
+import auth
+import database
+import schemas
+import services
+from database import engine
 import models
+from typing import List
 
 load_dotenv()
 
@@ -25,12 +29,15 @@ try:
     with engine.connect() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         connection.commit()
+    models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
     print("--- Database Connected & Tables Ready ---")
 except Exception as e:
     print(f"--- Database Connection Failed: {e} ---")
 
 app = FastAPI()
+doc_service = services.DocumentService()
+user_service = services.UserService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,6 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def extract_text_from_pdf(file_bytes):
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     text_content = ""
@@ -48,52 +56,44 @@ def extract_text_from_pdf(file_bytes):
     return text_content
 
 
-@app.get("/")
-def read_root():
-    return {"status": "System is online", "model": "Gemini 1.5 Flash"}
+@app.post("/register")
+def register(username: str, password: str, db: Session = Depends(database.get_db)):
+    if user_service.get_user_by_username(db, username):
+        raise HTTPException(status_code=400, detail="Username already registered")
+    hashed = auth.hash_password(password)
+    user_service.create_user(db, username, hashed)
+    return {"message": "User created"}
+
+
+@app.post("/login")
+def login(username: str, password: str, db: Session = Depends(database.get_db)):
+    user = user_service.get_user_by_username(db, username)
+    if not user or not auth.verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    token = auth.create_access_token(data={"sub": user.username})
+    return {"access_token": token, "token_type": "bearer"}
 
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # 1. VALIDATE
+async def upload_file(
+        file: UploadFile = File(...),
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
     if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are supported right now.")
+        raise HTTPException(status_code=400, detail="PDF required")
 
-    file_content = await file.read()
+    content = doc_service.extract_text(await file.read())
+    summary = doc_service.generate_summary(content)
 
-    try:
-        full_text = extract_text_from_pdf(file_content)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to parse PDF: {str(e)}")
+    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id)
+    return doc
 
-    prompt = f"""
-        Please analyze the following document text. 
-        Regardless of the document's original language (English, Hungarian, etc.), 
-        you must output the summary explicitly in HUNGARIAN (Magyarul).
 
-        Structure the summary clearly for a student.
-
-        Document Text:
-        {full_text[:30000]}
-        """
-    try:
-        response = model.generate_content(prompt)
-        summary_text = response.text
-    except Exception as e:
-        summary_text = "Error generating summary."
-        print(f"Gemini Error: {e}")
-
-    new_doc = models.Document(
-        filename=file.filename,
-        content=full_text,
-        summary=summary_text
-    )
-    db.add(new_doc)
-    db.commit()
-    db.refresh(new_doc)
-
-    return {
-        "filename": new_doc.filename,
-        "summary": new_doc.summary,
-        "id": new_doc.id
-    }
+@app.get("/history", response_model=List[schemas.DocumentResponse])
+def read_history(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    return doc_service.get_user_history(db, current_user.id)
