@@ -29,9 +29,7 @@ try:
     with engine.connect() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         connection.commit()
-    models.Base.metadata.drop_all(bind=engine)
-    models.Base.metadata.create_all(bind=engine)
-    print("--- Database Connected & Tables Ready ---")
+    print("--- Database Connected ---")
 except Exception as e:
     print(f"--- Database Connection Failed: {e} ---")
 
