@@ -1,0 +1,33 @@
+<div class="quiz-layout">
+  <h2>My Quizzes</h2>
+
+  @if (quizzes().length === 0) {
+    <div class="empty-state">
+      <p>No quizzes yet. Go to "History" and generate one!</p>
+    </div>
+  }
+
+  <div class="quiz-grid">
+    @for (quiz of quizzes(); track quiz.id) {
+      <div class="quiz-card" [class.passed]="quiz.passed">
+        <div class="card-header">
+          <h3>{{ quiz.document.filename }}</h3>
+          <span class="badge" [class.success]="quiz.passed">
+            {{ quiz.passed ? 'PASSED' : 'IN PROGRESS' }}
+          </span>
+        </div>
+
+        <div class="card-stats">
+          <div class="stat">
+            <span class="label">Top Score</span>
+            <span class="value">{{ quiz.top_score }} / 10</span>
+          </div>
+        </div>
+
+        <button (click)="playQuiz(quiz.id)">
+          {{ quiz.top_score > 0 ? 'Retake Quiz' : 'Start Quiz' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -2,10 +2,14 @@ import { Routes } from '@angular/router';
 import { FileUploadComponent } from './components/file-upload/file-upload';
 import { HistoryComponent } from './components/history/history';
 import { LoginComponent } from './components/login/login';
+import { QuizzesComponent } from './components/quizzes/quizzes';
+import { QuizPlayerComponent } from './components/quiz-player/quiz-player';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'upload', pathMatch: 'full' },
   { path: 'upload', component: FileUploadComponent },
   { path: 'history', component: HistoryComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'quizzes', component: QuizzesComponent },
+  { path: 'quiz-player/:id', component: QuizPlayerComponent },
 ];

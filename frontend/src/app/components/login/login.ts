@@ -19,6 +19,7 @@ export class LoginComponent {
   username = signal('')
   password = signal('');
   errorMessage = signal('');
+  isSuccessful = signal(false);
 
   toggleMode() {
     this.isRegisterMode.update(v => !v);
@@ -35,9 +36,11 @@ export class LoginComponent {
       this.auth.register(credentials.username, credentials.password).subscribe({
         next: () => {
           this.isRegisterMode.set(false);
+          this.isSuccessful.set(true);
           this.errorMessage.set('Registration successful. Please log in.');
         },
         error: (error) => {
+          this.isSuccessful.set(false);
           this.errorMessage.set('Registration failed. Username might be taken.');
         }
       });
@@ -45,9 +48,11 @@ export class LoginComponent {
       console.log("Sending request to /login...");
       this.auth.login(credentials.username, credentials.password).subscribe({
         next: () => {
+          this.isSuccessful.set(true);
           this.router.navigate(['/upload']);
         },
         error: (error) => {
+          this.isSuccessful.set(false);
           this.errorMessage.set('Invalid username or password.');
         }
       });

@@ -1,7 +1,11 @@
 <div class="auth-container">
   <h2>{{ isRegisterMode() ? 'Create Account' : 'Welcome Back' }}</h2>
 
-  @if (errorMessage()) {
+  @if (isSuccessful()) {
+    <div class="success">{{ errorMessage() }}</div>
+  }
+
+  @if (!isSuccessful()) {
     <div class="error">{{ errorMessage() }}</div>
   }
 

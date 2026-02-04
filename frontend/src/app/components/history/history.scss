@@ -1,57 +1,113 @@
 .history-layout {
   display: flex;
   height: 100%;
-  gap: 20px;
+  overflow: hidden;
+  background-color: #1e1e1e;
 }
 
 .history-list {
-  width: 300px;
-  background: white;
-  border-right: 1px solid #e0e0e0;
-  padding: 1rem;
+  width: 320px;
+  background-color: #252526;
+  border-right: 1px solid #333;
+  padding: 1.5rem;
   overflow-y: auto;
   flex-shrink: 0;
+  color: #e0e0e0;
 
-  h3 { margin-top: 0; color: #2c3e50; font-size: 1.1rem; }
+  h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+  }
 
-  .empty-msg { color: #7f8c8d; font-style: italic; }
+  .empty-msg {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    margin-top: 2rem;
+  }
 
   .history-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px;
-    border-radius: 8px;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background 0.2s;
-    border-bottom: 1px solid #f5f5f5;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 8px;
+    position: relative;
 
-    &:hover { background: #f8f9fa; }
-
-    &.selected {
-      background: #e3f2fd;
-      border-color: #bbdefb;
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
     }
 
-    .doc-icon { font-size: 1.5rem; }
+    &.selected {
+      background-color: rgba(64, 156, 255, 0.15);
+    }
+
+    .doc-icon {
+      font-size: 1.6rem;
+      opacity: 0.8;
+    }
 
     .doc-info {
       display: flex;
       flex-direction: column;
+      flex: 1;
+      overflow: hidden;
 
-      .filename { font-weight: 500; color: #34495e; font-size: 0.95rem; }
-      .date { font-size: 0.8rem; color: #95a5a6; }
+      .filename {
+        font-weight: 500;
+        font-size: 1rem;
+        color: #f0f0f0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .date {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 4px;
+      }
+    }
+
+    .delete-btn {
+      background-color: transparent;
+      border: none;
+      color: #666;
+
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+
+      padding: 8px;
+      border-radius: 50%;
+      margin-left: auto;
+
+      opacity: 0.6;
+      transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+
+      &:hover {
+        background-color: rgba(211, 47, 47, 0.15);
+        color: #ff5252;
+        opacity: 1;
+        transform: scale(1.15);
+      }
     }
   }
 }
 
 .history-content {
   flex: 1;
-  padding: 1rem;
+  padding: 2rem;
   overflow-y: auto;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  background-color: #1e1e1e;
+
+  min-width: 0;
 
   .placeholder {
     display: flex;
@@ -59,13 +115,62 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: #95a5a6;
+    color: #666;
 
-    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.5;
+    }
+    p {
+      font-size: 1.1rem;
+    }
   }
 
-  .markdown-body {
-    line-height: 1.6;
-    color: #2c3e50;
+  ::ng-deep .markdown-body {
+    color: #ddd;
+  }
+}
+
+.summary-card {
+  h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    color: #fff;
+  }
+}
+
+.action-bar {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: flex-end;
+
+  .quiz-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 }
