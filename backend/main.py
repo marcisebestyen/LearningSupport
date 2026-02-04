@@ -13,6 +13,7 @@ import services
 from database import engine
 import models
 from typing import List
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -52,6 +53,10 @@ def extract_text_from_pdf(file_bytes):
     for page in doc:
         text_content += page.get_text()
     return text_content
+
+
+class ScoreSubmission(BaseModel):
+    score: int
 
 
 @app.post("/register")
@@ -95,3 +100,87 @@ def read_history(
         current_user: models.User = Depends(auth.get_current_user)
 ):
     return doc_service.get_user_history(db, current_user.id)
+
+@app.delete("/delete/{doc_id}")
+def delete_document(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    success = doc_service.delete_document(db, doc_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Document not found or unauthorized")
+
+    return {"message": "Document deleted successfully."}
+
+
+@app.post("/documents/{doc_id}/quiz")
+def create_quiz(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    quiz_service = services.QuizService(db)
+    quiz = quiz_service.generate_quiz(doc_id, current_user.id)
+    if not quiz:
+        raise HTTPException(status_code=500, detail="Failed to generate quiz")
+    return {"quiz_id": quiz.id}
+
+
+@app.get("/quizzes")
+def list_quizzes(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    quiz_service = services.QuizService(db)
+    quizzes = quiz_service.get_user_quizzes(current_user.id)
+    return quizzes
+
+
+@app.get("/quizzes/{quiz_id}")
+def get_quiz(
+        quiz_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    print(f"\n--- DEBUGGING QUIZ {quiz_id} ---")
+    print(f"Requesting User: {current_user.username} (ID: {current_user.id})")
+
+    quiz_any_owner = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+
+    if not quiz_any_owner:
+        print("❌ RESULT: Quiz ID does not exist in the database.")
+        raise HTTPException(status_code=404, detail="Quiz ID not found in DB")
+
+    print(f"✅ Quiz found! It belongs to Owner ID: {quiz_any_owner.owner_id}")
+
+    if quiz_any_owner.owner_id != current_user.id:
+        print(f"❌ OWNERSHIP MISMATCH! User {current_user.id} tried to access Quiz owned by {quiz_any_owner.owner_id}")
+        raise HTTPException(status_code=404, detail="Quiz not found (Ownership mismatch)")
+
+    try:
+        service_result = services.QuizService(db).get_quiz_by_id(quiz_id, current_user.id)
+        if not service_result:
+            print("❌ Service returned None (This implies the service query logic is broken)")
+        else:
+            print(f"✅ Service loaded quiz with {len(service_result.questions)} questions.")
+            return service_result
+    except Exception as e:
+        print(f"❌ CRASH during service call: {e}")
+        raise e
+
+    raise HTTPException(status_code=404, detail="Unknown error in retrieval")
+
+
+@app.post("/quizzes/{quiz_id}/submit")
+def submit_quiz_score(
+    quiz_id: int,
+    submission: ScoreSubmission,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    quiz_service = services.QuizService(db)
+    result = quiz_service.submit_score(quiz_id, submission.score, current_user.id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    return result

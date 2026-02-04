@@ -19,6 +19,8 @@ export class AppComponent {
     if (url.includes('upload')) return 'Upload Document';
     if (url.includes('history')) return 'Document History';
     if (url.includes('login')) return 'Authentication';
+    if (url.includes('quiz-player')) return 'Quiz Session';
+    if (url.includes('quizzes')) return 'My Quizzes';
     return 'Welcome';
   });
 

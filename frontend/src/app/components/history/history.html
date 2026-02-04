@@ -17,6 +17,7 @@
           <span class="filename">{{ item.filename }}</span>
           <span class="date">{{ item.upload_date | date:'shortDate' }}</span>
         </div>
+        <button class="delete-btn" (click)="deleteDoc($event, item)" title="Delete">🗑️</button>
       </div>
     }
   </div>
@@ -27,6 +28,11 @@
         <h2>Summary: {{ selectedFilename() }}</h2>
         <div class="markdown-body">
           <markdown [data]="selectedSummary()"></markdown>
+        </div>
+        <div class="action-bar">
+          <button class="quiz-btn" (click)="generateQuiz()">
+            ✨ Generate Quiz
+          </button>
         </div>
       </div>
     } @else {

@@ -1,0 +1,63 @@
+<div class="player-layout">
+  @if (loading()) {
+    <div class="loading">Loading Quiz...</div>
+  } @else {
+
+    @if (score() !== null) {
+      <div class="result-card">
+        <h1>Quiz Complete!</h1>
+        <div class="score-circle" [class.pass]="score()! >= 5">
+          {{ score() }} / 10
+        </div>
+
+        @if (score()! >= 5) {
+          <p class="success-msg">🎉 Congratulations! You passed!</p>
+        } @else {
+          <p class="fail-msg">❌ You need 5 points to pass. Try again!</p>
+        }
+
+        <button class="primary-btn" (click)="backToMenu()">Back to Quizzes</button>
+      </div>
+    }
+
+    @else {
+      @if (quizData(); as quiz) {
+        <div class="quiz-container">
+          <div class="header">
+            <span>Question {{ currentQuestionIndex() + 1 }} / {{ quiz.questions.length }}</span>
+            <div class="progress-bar">
+              <div class="fill" [style.width.%]="((currentQuestionIndex() + 1) / quiz.questions.length) * 100"></div>
+            </div>
+          </div>
+
+          <div class="question-card">
+            <h2>{{ quiz.questions[currentQuestionIndex()].question_text }}</h2>
+
+            <div class="options-list">
+              @for (opt of quiz.questions[currentQuestionIndex()].options; track opt) {
+                <button
+                  class="option-btn"
+                  [class.selected]="userAnswers()[currentQuestionIndex()] === opt"
+                  (click)="selectOption(opt)">
+                  {{ opt }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="controls">
+            <button
+              [disabled]="currentQuestionIndex() === 0"
+              (click)="prevQuestion()">Previous</button>
+
+            @if (currentQuestionIndex() === quiz.questions.length - 1) {
+              <button class="submit-btn" (click)="submitQuiz()">Submit Quiz</button>
+            } @else {
+              <button class="next-btn" (click)="nextQuestion()">Next</button>
+            }
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

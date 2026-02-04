@@ -1,0 +1,117 @@
+.player-layout {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1e1e1e;
+  color: white;
+}
+
+.quiz-container {
+  width: 100%;
+  max-width: 600px;
+  background: #252526;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.header {
+  margin-bottom: 2rem;
+  color: #888;
+
+  .progress-bar {
+    height: 4px;
+    background: #333;
+    margin-top: 10px;
+    border-radius: 2px;
+    overflow: hidden;
+
+    .fill {
+      height: 100%;
+      background: #007acc;
+      transition: width 0.3s;
+    }
+  }
+}
+
+.question-card h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-btn {
+  padding: 14px;
+  text-align: left;
+  background: #333;
+  border: 1px solid transparent;
+  color: #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+
+  &:hover { background: #3e3e3e; }
+
+  &.selected {
+    background: #005a9e;
+    border-color: #4da6ff;
+    color: white;
+  }
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+
+  button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+
+  .next-btn { background: #fff; color: #000; }
+  .submit-btn { background: #2e7d32; color: white; }
+}
+
+.result-card {
+  text-align: center;
+
+  .score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 8px solid #d32f2f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 2rem auto;
+
+    &.pass { border-color: #2e7d32; }
+  }
+
+  .primary-btn {
+    margin-top: 2rem;
+    padding: 12px 24px;
+    background: #007acc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+}
