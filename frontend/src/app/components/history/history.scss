@@ -6,7 +6,7 @@
 }
 
 .history-list {
-  width: 320px;
+  width: 260px;
   background-color: #252526;
   border-right: 1px solid #333;
   padding: 1.5rem;
@@ -162,15 +162,35 @@
     transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 
-    &:hover {
+    &:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6);
     }
 
-    &:active {
+    &:active:not(:disabled) {
       transform: translateY(0);
     }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 2s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg) }
   }
 }

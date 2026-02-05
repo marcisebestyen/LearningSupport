@@ -35,4 +35,8 @@ export class QuizzesComponent {
   playQuiz(id: number) {
     this.router.navigate(['/quiz-player', id]);
   }
+
+  reviewQuiz(id: number) {
+    this.router.navigate(['/quiz-player', id], { queryParams: { mode: 'review' } });
+  }
 }

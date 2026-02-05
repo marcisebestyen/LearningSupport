@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpRequestService } from '../../services/http-request.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-history',
@@ -19,6 +20,7 @@ export class HistoryComponent {
   selectedSummary = signal<string | null>(null);
   selectedFilename = signal<string>('');
   selectedDocId = signal<number | null>(null);
+  isGeneratingQuiz = signal(false);
 
   ngOnInit() {
     this.loadHistory();
@@ -71,7 +73,14 @@ export class HistoryComponent {
     const docId = this.selectedDocId();
     if (!docId) return;
 
+    this.isGeneratingQuiz.set(true);
+
     this.httpService.generateQuizRequest(docId)
+      .pipe(
+        finalize(() => {
+          this.isGeneratingQuiz.set(false);
+        })
+      )
       .subscribe({
         next: (res) => {
           console.log("Quiz Response:", res);

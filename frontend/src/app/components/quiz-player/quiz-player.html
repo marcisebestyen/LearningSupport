@@ -5,18 +5,63 @@
 
     @if (score() !== null) {
       <div class="result-card">
-        <h1>Quiz Complete!</h1>
-        <div class="score-circle" [class.pass]="score()! >= 5">
-          {{ score() }} / 10
+
+        <div class="result-header">
+          <h1>{{ isReviewMode() ? 'Quiz Results' : 'Quiz Complete!' }}</h1>
+
+          <div class="score-circle" [class.pass]="score()! >= 5">
+            {{ score() }} / 10
+          </div>
+
+          @if (isReviewMode()) {
+            <p class="info-msg">ℹ️ Showing correct answer key.</p>
+          }
+
+          @if (!isReviewMode()) {
+            @if (score()! >= 5) {
+              <p class="success-msg">🎉 Congratulations! You passed!</p>
+            } @else {
+              <p class="fail-msg">❌ You need 5 points to pass. Try again!</p>
+            }
+          }
+
+          <button class="primary-btn" (click)="backToMenu()">Back to Quizzes</button>
         </div>
-
         @if (score()! >= 5) {
-          <p class="success-msg">🎉 Congratulations! You passed!</p>
-        } @else {
-          <p class="fail-msg">❌ You need 5 points to pass. Try again!</p>
-        }
+          <div class="review-section">
+            <h3>{{ isReviewMode() ? 'Correct Answer Key' : 'Detailed Review' }}</h3>
 
-        <button class="primary-btn" (click)="backToMenu()">Back to Quizzes</button>
+            @if (quizData(); as quiz) {
+              @for (q of quiz.questions; track q; let i = $index) {
+
+                <div class="review-item">
+                  <p class="review-question"><strong>{{ i + 1 }}.</strong> {{ q.question_text }}</p>
+
+                  <div class="review-options">
+                    @for (opt of q.options; track opt) {
+
+                      <div class="review-opt"
+                           [class.correct-answer]="opt === q.correct_answer"
+                           [class.user-wrong]="!isReviewMode() && userAnswers()[i] === opt && opt !== q.correct_answer">
+
+                        {{ opt }}
+
+                        @if (opt === q.correct_answer) {
+                          <span>✅</span>
+                        }
+
+                        @if (!isReviewMode() && userAnswers()[i] === opt && opt !== q.correct_answer) {
+                          <span>❌</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+
+              }
+            }
+          </div>
+        }
       </div>
     }
 
@@ -32,7 +77,6 @@
 
           <div class="question-card">
             <h2>{{ quiz.questions[currentQuestionIndex()].question_text }}</h2>
-
             <div class="options-list">
               @for (opt of quiz.questions[currentQuestionIndex()].options; track opt) {
                 <button
@@ -46,10 +90,7 @@
           </div>
 
           <div class="controls">
-            <button
-              [disabled]="currentQuestionIndex() === 0"
-              (click)="prevQuestion()">Previous</button>
-
+            <button [disabled]="currentQuestionIndex() === 0" (click)="prevQuestion()">Previous</button>
             @if (currentQuestionIndex() === quiz.questions.length - 1) {
               <button class="submit-btn" (click)="submitQuiz()">Submit Quiz</button>
             } @else {
