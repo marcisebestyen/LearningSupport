@@ -30,8 +30,13 @@
           <markdown [data]="selectedSummary()"></markdown>
         </div>
         <div class="action-bar">
-          <button class="quiz-btn" (click)="generateQuiz()">
-            ✨ Generate Quiz
+          <button class="quiz-btn" (click)="generateQuiz()" [disabled]="isGeneratingQuiz()">
+            @if (isGeneratingQuiz()) {
+              <div class="spinner"></div>
+              Generating...
+            } @else {
+              ✨ Generate Quiz
+            }
           </button>
         </div>
       </div>

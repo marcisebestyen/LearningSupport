@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { DragDropDirective } from '../../directives/drag-drop';
 import { MarkdownModule } from 'ngx-markdown';
 import { AuthService } from '../../services/auth.service';
+import { HttpRequestService } from '../../services/http-request.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -21,7 +22,7 @@ export class FileUploadComponent {
   isLoading = signal<boolean>(false);
   history = signal<any[]>([]);
 
-  constructor(private http: HttpClient, private auth: AuthService, private router: Router) { }
+  constructor(private httpService: HttpRequestService, private auth: AuthService, private router: Router) { }
 
   onFileDropped(file: File) {
     this.handleFile(file);
@@ -46,10 +47,7 @@ export class FileUploadComponent {
     this.uploadStatus.set('Uploading and analyzing...');
     this.summary.set('');
 
-    const formData = new FormData();
-    formData.append('file', file);
-
-    this.http.post<any>('http://127.0.0.1:8000/upload/', formData)
+    this.httpService.uploadFileRequest(file)
       .subscribe({
         next: (response) => {
           this.isLoading.set(false);

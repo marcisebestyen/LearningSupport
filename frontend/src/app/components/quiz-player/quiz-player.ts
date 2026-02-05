@@ -1,7 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpRequestService } from '../../services/http-request.service';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 
 interface Question {
   question_text: string;
@@ -17,14 +18,18 @@ interface QuizData {
 @Component({
   selector: 'quiz-player',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgClass],
   templateUrl: './quiz-player.html',
   styleUrl: 'quiz-player.scss'
 })
 export class QuizPlayerComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private httpService = inject(HttpRequestService);
   private http = inject(HttpClient);
+  private quizSubmitted = signal(false);
+  private hasPassed = signal(false);
+  isReviewMode = signal(false);
 
   quizId: string | null = null;
   quizData = signal<QuizData | null>(null);
@@ -36,22 +41,41 @@ export class QuizPlayerComponent implements OnInit {
 
   ngOnInit() {
     this.quizId = this.route.snapshot.paramMap.get('id');
+    const mode = this.route.snapshot.queryParamMap.get('mode');
+
+    if (mode === 'review') {
+      this.isReviewMode.set(true);
+    }
+
     if (this.quizId) {
       this.loadQuiz(this.quizId);
     }
   }
 
   loadQuiz(id: string) {
-    this.http.get(`http://127.0.0.1:8000/quizzes/${id}`).subscribe({
-      next: (data: any) => {
-        this.quizData.set(data);
-        this.userAnswers.set(new Array(data.questions.length).fill(null));
-        this.loading.set(false);
-      },
-      error: (error) => {
-        this.router.navigate(['/quizzes']);
-      }
-    });
+    this.httpService.loadQuizRequest(id)
+      .subscribe({
+        next: (data: any) => {
+          this.quizData.set(data);
+          this.userAnswers.set(new Array(data.questions.length).fill(null));
+          this.loading.set(false);
+
+          if (this.isReviewMode()) {
+            if (!data.passed) {
+              alert("You haven't passed the quiz yet.");
+              this.router.navigate(['/quizzes']);
+              return;
+            }
+
+            this.score.set(data.top_score);
+            this.hasPassed.set(true);
+            this.quizSubmitted.set(true);
+          }
+        },
+        error: (error) => {
+          this.router.navigate(['/quizzes']);
+        }
+      });
   }
 
   selectOption(option: string) {
@@ -96,14 +120,31 @@ export class QuizPlayerComponent implements OnInit {
 
     this.score.set(calculatedScore);
 
+    this.quizSubmitted.set(true);
+    this.hasPassed.set(calculatedScore >= 5);
+
     if (this.quizId) {
-      this.http.post(`http://127.0.0.1:8000/quizzes/${this.quizId}/submit`, {
-        score: calculatedScore
-      }).subscribe();
+      this.httpService.submitQuizRequest(this.quizId, calculatedScore)
+        .subscribe({
+          next: (res) => {
+            console.log("Score submitted successfully.");
+          },
+          error: (error) => {
+            console.error("Error submitting score ", error);
+          }
+        })
     }
   }
 
   backToMenu() {
     this.router.navigate(['/quizzes']);
+  }
+
+  isCorrect(questionIndex: number, option: string): boolean {
+    return this.quizData()?.questions[questionIndex]?.correct_answer === option;
+  }
+
+  isSelected(questionIndex: number, option: string): boolean {
+    return this.userAnswers()[questionIndex] === option;
   }
 }

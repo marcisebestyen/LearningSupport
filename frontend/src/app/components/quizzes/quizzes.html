@@ -24,9 +24,18 @@
           </div>
         </div>
 
-        <button (click)="playQuiz(quiz.id)">
-          {{ quiz.top_score > 0 ? 'Retake Quiz' : 'Start Quiz' }}
-        </button>
+        <div class="card-actions">
+          <button class="primary-btn" (click)="playQuiz(quiz.id)">
+            {{ quiz.top_score > 0 ? 'Retake Quiz' : 'Start Quiz' }}
+          </button>
+
+          @if (quiz.passed) {
+            <button class="secondary-btn" (click)="reviewQuiz(quiz.id)">
+              Check Answers 👁️
+            </button>
+          }
+        </div>
+
       </div>
     }
   </div>
