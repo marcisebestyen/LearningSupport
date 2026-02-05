@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpRequestService } from '../../services/http-request.service';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
@@ -24,6 +25,7 @@ interface QuizData {
 export class QuizPlayerComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private httpService = inject(HttpRequestService);
   private http = inject(HttpClient);
 
   quizId: string | null = null;
@@ -42,16 +44,17 @@ export class QuizPlayerComponent implements OnInit {
   }
 
   loadQuiz(id: string) {
-    this.http.get(`http://127.0.0.1:8000/quizzes/${id}`).subscribe({
-      next: (data: any) => {
-        this.quizData.set(data);
-        this.userAnswers.set(new Array(data.questions.length).fill(null));
-        this.loading.set(false);
-      },
-      error: (error) => {
-        this.router.navigate(['/quizzes']);
-      }
-    });
+    this.httpService.loadQuizRequest(id)
+      .subscribe({
+        next: (data: any) => {
+          this.quizData.set(data);
+          this.userAnswers.set(new Array(data.questions.length).fill(null));
+          this.loading.set(false);
+        },
+        error: (error) => {
+          this.router.navigate(['/quizzes']);
+        }
+      });
   }
 
   selectOption(option: string) {
@@ -97,9 +100,15 @@ export class QuizPlayerComponent implements OnInit {
     this.score.set(calculatedScore);
 
     if (this.quizId) {
-      this.http.post(`http://127.0.0.1:8000/quizzes/${this.quizId}/submit`, {
-        score: calculatedScore
-      }).subscribe();
+      this.httpService.submitQuizRequest(this.quizId, calculatedScore)
+        .subscribe({
+          next: (res) => {
+            console.log("Score submitted successfully.");
+          },
+          error: (error) => {
+            console.error("Error submitting score ", error);
+          }
+        })
     }
   }
 

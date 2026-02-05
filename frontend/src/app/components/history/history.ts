@@ -1,6 +1,6 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpRequestService } from '../../services/http-request.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { Router } from '@angular/router';
 
@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
   styleUrl: './history.scss'
 })
 export class HistoryComponent {
-  private http = inject(HttpClient);
+  private httpService = inject(HttpRequestService);
   private router = inject(Router);
 
   history = signal<any[]>([]);
@@ -25,7 +25,7 @@ export class HistoryComponent {
   }
 
   loadHistory() {
-    this.http.get<any[]>('http://127.0.0.1:8000/history')
+    this.httpService.loadHistoryRequest()
       .subscribe({
         next: (data) => {
           console.log("History data loaded: ", data);
@@ -50,7 +50,7 @@ export class HistoryComponent {
       return;
     }
 
-    this.http.delete(`http://127.0.0.1:8000/delete/${item.id}`)
+    this.httpService.deleteDocRequest(item)
       .subscribe({
         next: () => {
           this.history.update(currentList => currentList.filter(d => d.id !== item.id));
@@ -71,7 +71,7 @@ export class HistoryComponent {
     const docId = this.selectedDocId();
     if (!docId) return;
 
-    this.http.post<any>(`http://127.0.0.1:8000/documents/${docId}/quiz`, {})
+    this.httpService.generateQuizRequest(docId)
       .subscribe({
         next: (res) => {
           console.log("Quiz Response:", res);

@@ -1,7 +1,7 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import {Router, RouterModule} from '@angular/router';
+import {Component, inject, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {HttpRequestService} from '../../services/http-request.service';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-quizzes',
@@ -11,8 +11,8 @@ import {Router, RouterModule} from '@angular/router';
   styleUrl: './quizzes.scss',
 })
 export class QuizzesComponent {
-  private http = inject(HttpClient);
   private router = inject(Router);
+  private httpService = inject(HttpRequestService);
 
   quizzes = signal<any[]>([]);
 
@@ -21,14 +21,15 @@ export class QuizzesComponent {
   }
 
   loadQuizzes() {
-    this.http.get<any[]>(`http://127.0.0.1:8000/quizzes`).subscribe({
-      next: (data) => {
-        this.quizzes.set(data);
-      },
-      error: (error) => {
-        console.error('Failed to load quizzes ', error);
-      }
-    });
+    this.httpService.loadQuizzesRequest()
+      .subscribe({
+        next: (data) => {
+          this.quizzes.set(data);
+        },
+        error: (error) => {
+          console.error('Failed to load quizzes ', error);
+        }
+      });
   }
 
   playQuiz(id: number) {
