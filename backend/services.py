@@ -1,3 +1,4 @@
+import io
 import fitz
 import google.generativeai as genai
 from sqlalchemy.orm import Session, joinedload
@@ -5,6 +6,8 @@ import models
 import os
 import json
 from google.generativeai.types import GenerationConfig
+from docx import Document as DocxDocument
+from pptx import Presentation
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
@@ -13,9 +16,36 @@ class DocumentService:
         genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
         self.model = genai.GenerativeModel('gemini-2.5-flash')
 
-    def extract_text(self, file_bytes: bytes) -> str:
+    def extract_text(self, file_bytes: bytes, filename: str) -> str:
+        ext = filename.split('.')[-1].lower()
+        if ext == 'pdf':
+            return self._extract_from_pdf(file_bytes)
+        elif ext == 'docx':
+            return self._extract_from_docx(file_bytes)
+        elif ext == 'pptx':
+            return self._extract_from_pptx(file_bytes)
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
+
+
+    def _extract_from_pdf(self, file_bytes: bytes):
         doc = fitz.open(stream=file_bytes, filetype="pdf")
         return "".join([page.get_text() for page in doc])
+
+    def _extract_from_docx(self, file_bytes: bytes):
+        cod = DocxDocument(io.BytesIO(file_bytes))
+        return "/n".join([para.text for para in cod.paragraphs])
+
+    def _extract_from_pptx(self, file_bytes: bytes):
+        prs = Presentation(io.BytesIO(file_bytes))
+        text_content = []
+
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if hasattr(shape, "text"):
+                    text_content.append(shape.text)
+
+        return "/n".join(text_content)
 
     def generate_summary(self, text: str) -> str:
         prompt = f"""

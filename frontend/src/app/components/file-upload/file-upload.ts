@@ -56,6 +56,11 @@ export class FileUploadComponent {
   }
 
   prepareFile(file: File) {
+    if (!this.isValidFile(file)) {
+      alert('Invalid file type! Please upload only PDF, Word (.docx) or PowerPoint (.pptx) files.');
+      return;
+    }
+
     this.selectedFile.set(file);
     this.fileName.set(file.name);
     this.fileSize.set((file.size / 1024).toFixed(2) + ' KB');
@@ -95,5 +100,15 @@ export class FileUploadComponent {
           console.error(error);
         }
       })
+  }
+
+  isValidFile(file: File): boolean {
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ];
+
+    return allowedTypes.includes(file.type);
   }
 }

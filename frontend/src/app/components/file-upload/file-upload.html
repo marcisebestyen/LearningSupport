@@ -4,9 +4,16 @@
     <div class="drop-zone" appDragDrop (fileDropped)="onFileDropped($event)">
       <div class="icon">☁️</div>
       <h3>Drag & Drop your PDF here</h3>
+      <p>PDF, Word (.docx) or PowerPoint (.pptx)</p>
       <p>or</p>
       <label for="fileInput" class="browse-btn">Browse Files</label>
-      <input type="file" id="fileInput" (change)="onFileSelected($event)" accept="application/pdf" hidden>
+      <input
+        type="file"
+        id="fileInput"
+        (change)="onFileSelected($event)"
+        accept=".pdf, .docx, .pptx"
+        hidden
+      >
     </div>
   }
 
