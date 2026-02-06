@@ -27,3 +27,16 @@ class ChatResponse(BaseModel):
 class ChatMessageResponse(BaseModel):
     role: str
     content: str
+
+class Flashcard(BaseModel):
+    front: str
+    back: str
+
+class FlashcardSetResponse(BaseModel):
+    id: int
+    created_at: datetime
+    card_count: int
+    document_filename: str
+
+    class Config:
+        from_attributes = True

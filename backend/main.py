@@ -203,6 +203,36 @@ def submit_quiz_score(
         raise HTTPException(status_code=404, detail="Quiz not found")
     return result
 
+@app.post("/documents/{doc_id}/flashcards")
+def create_flashcards(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.QuizService(db)
+    set_id = service.generate_flashcards(doc_id, current_user.id)
+    if not set_id:
+        raise HTTPException(status_code=500, detail="Failed to generate flashcards")
+    return {"set_id": set_id}
+
+@app.get("/flashcards/{set_id}", response_model=List[schemas.Flashcard])
+def get_flashcard(
+        set_id: int,
+        db: Session = Depends(database.get_db),
+):
+    service = services.QuizService(db)
+    flash_set = service.get_flashcard_set(set_id)
+    if not flash_set:
+        raise HTTPException(status_code=404, detail="Failed to get flashcards")
+    return flash_set.cards
+
+@app.get("/flashcards-list", response_model=List[schemas.FlashcardSetResponse])
+def list_flashcards(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.QuizService(db)
+    return service.get_user_flashcard_sets(current_user.id)
 
 @app.post("/documents/{doc_id}/chat")
 def chat_with_document(

@@ -61,6 +61,10 @@
             </div>
 
             <div class="action-bar">
+              <button class="flashcard-btn" (click)="startFlashcards()" [disabled]="isGeneratingCards()">
+                @if (isGeneratingCards()) { <div class="spinner"></div> Creating... }
+                @else { 🎴 Study Flashcards }
+              </button>
               <button class="quiz-btn" (click)="generateQuiz()" [disabled]="isGeneratingQuiz()">
                 @if (isGeneratingQuiz()) { <div class="spinner"></div> Generating... }
                 @else { ✨ Generate Quiz }

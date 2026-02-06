@@ -231,6 +231,65 @@ class QuizService:
             return None
 
 
+    def generate_flashcards(self, document_id: int, user_id: int):
+        doc = self.db.query(models.Document).filter(
+            models.Document.id == document_id,
+            models.Document.owner_id == user_id
+        ).first()
+        if not doc:
+            return None
+
+        prompt = f"""
+        Analyze the text below and generate 10 flashcards. 
+        Output PURE JSON: [{{ "front": "term", "back": "definition" }}]
+        Language: HUNGARIAN.
+        Text: {doc.content[:30000]}
+        """
+
+        try:
+            config = GenerationConfig(response_mime_type="application/json")
+            response = self.model.generate_content(prompt, generation_config=config)
+            cards_data = json.loads(response.text)
+
+            new_set = models.FlashcardSet(document_id=doc.id)
+            self.db.add(new_set)
+            self.db.commit()
+            self.db.refresh(new_set)
+
+            for card in cards_data:
+                db_card = models.Flashcard(set_id=new_set.id, front=card['front'], back=card['back'])
+                self.db.add(db_card)
+
+            self.db.commit()
+            return new_set.id
+
+        except Exception as e:
+            print(f"!!! Flashcard Generation Error: {e}")
+            return None
+
+
+    def get_flashcard_set(self, set_id: int):
+        return self.db.query(models.FlashcardSet).options(
+            joinedload(models.FlashcardSet.cards)
+        ).filter(models.FlashcardSet.id == set_id).first()
+
+
+    def get_user_flashcard_sets(self, user_id: int):
+        sets = self.db.query(models.FlashcardSet).join(models.Document).filter(
+            models.Document.owner_id == user_id
+        ).order_by(models.FlashcardSet.created_at.desc()).all()
+
+        results = []
+        for fset in sets:
+            results.append({
+                "id": fset.id,
+                "created_at": fset.created_at,
+                "document_filename": fset.document.filename,
+                "card_count": len(fset.cards),
+            })
+        return results
+
+
     def get_user_quizzes(self, user_id: int):
         quizzes = self.db.query(models.Quiz).options(
             joinedload(models.Quiz.document)
