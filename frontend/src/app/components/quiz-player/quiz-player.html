@@ -19,17 +19,18 @@
 
           @if (!isReviewMode()) {
             @if (score()! >= 5) {
-              <p class="success-msg">🎉 Congratulations! You passed!</p>
+              <p class="success-msg">🎉 Excellent work! You passed the quiz.</p>
             } @else {
-              <p class="fail-msg">❌ You need 5 points to pass. Try again!</p>
+              <p class="fail-msg">❌ You need 5 points to pass. Keep studying!</p>
             }
           }
 
           <button class="primary-btn" (click)="backToMenu()">Back to Quizzes</button>
         </div>
+
         @if (score()! >= 5) {
           <div class="review-section">
-            <h3>{{ isReviewMode() ? 'Correct Answer Key' : 'Detailed Review' }}</h3>
+            <h3>{{ isReviewMode() ? 'Correct Answer Key' : 'Review Your Answers' }}</h3>
 
             @if (quizData(); as quiz) {
               @for (q of quiz.questions; track q; let i = $index) {
@@ -39,20 +40,14 @@
 
                   <div class="review-options">
                     @for (opt of q.options; track opt) {
-
                       <div class="review-opt"
                            [class.correct-answer]="opt === q.correct_answer"
                            [class.user-wrong]="!isReviewMode() && userAnswers()[i] === opt && opt !== q.correct_answer">
 
                         {{ opt }}
 
-                        @if (opt === q.correct_answer) {
-                          <span>✅</span>
-                        }
-
-                        @if (!isReviewMode() && userAnswers()[i] === opt && opt !== q.correct_answer) {
-                          <span>❌</span>
-                        }
+                        @if (opt === q.correct_answer) { <span>✅</span> }
+                        @if (!isReviewMode() && userAnswers()[i] === opt && opt !== q.correct_answer) { <span>❌</span> }
                       </div>
                     }
                   </div>
@@ -69,7 +64,7 @@
       @if (quizData(); as quiz) {
         <div class="quiz-container">
           <div class="header">
-            <span>Question {{ currentQuestionIndex() + 1 }} / {{ quiz.questions.length }}</span>
+            <span>Question {{ currentQuestionIndex() + 1 }} of {{ quiz.questions.length }}</span>
             <div class="progress-bar">
               <div class="fill" [style.width.%]="((currentQuestionIndex() + 1) / quiz.questions.length) * 100"></div>
             </div>
@@ -91,6 +86,7 @@
 
           <div class="controls">
             <button [disabled]="currentQuestionIndex() === 0" (click)="prevQuestion()">Previous</button>
+
             @if (currentQuestionIndex() === quiz.questions.length - 1) {
               <button class="submit-btn" (click)="submitQuiz()">Submit Quiz</button>
             } @else {

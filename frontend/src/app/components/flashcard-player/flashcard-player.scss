@@ -1,7 +1,7 @@
 .player-layout {
   display: flex;
   flex-direction: column;
-  height: 83vh;
+  height: 83.75vh;
   width: 100%;
   background-color: #121212;
   color: #e0e0e0;
@@ -24,17 +24,25 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
     &:hover {
-      background: #333;
-      color: #fff;
-      border-color: #666;
+      background: rgba(239, 83, 80, 0.1);
+      color: #ef5350;
+      border-color: #ef5350;
     }
   }
 
   .progress {
     font-weight: 600;
     color: #888;
+    background: #252526;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #333;
   }
 }
 
@@ -47,20 +55,22 @@
   perspective: 1000px;
   padding: 2rem;
   gap: 3rem;
+  background: radial-gradient(circle at center, #1e1e1e 0%, #121212 70%);
 }
 
 .loading {
-  color: #888;
+  color: #667eea;
   font-size: 1.2rem;
+  font-weight: 500;
   animation: pulse 1.5s infinite;
 }
 
 .card-scene {
   width: 600px;
   max-width: 95%;
-  height: 350px;
+  height: 380px;
   position: relative;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 }
 
 .card-object {
@@ -80,52 +90,53 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  backface-visibility: hidden; /* Hides the back when facing away */
+  backface-visibility: hidden;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 3rem;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   border: 1px solid #333;
+  background: #252526;
 
   .hint {
     position: absolute;
-    top: 1rem;
+    top: 1.5rem;
     left: 1.5rem;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     color: #666;
-    font-weight: bold;
+    font-weight: 700;
   }
 
   .text {
-    font-size: 1.5rem;
-    line-height: 1.6;
+    font-size: 1.8rem;
+    line-height: 1.5;
     color: #fff;
+    font-weight: 500;
   }
 
   &.front {
-    background: linear-gradient(145deg, #2d2d2d, #252526);
     .click-hint {
       position: absolute;
-      bottom: 1rem;
+      bottom: 1.5rem;
       font-size: 0.8rem;
       color: #555;
+      opacity: 0.7;
     }
   }
 
   &.back {
-    background: linear-gradient(145deg, #252526, #1e1e1e);
-    transform: rotateY(180deg); /* Pre-rotate the back */
-    border: 1px solid #444;
+    transform: rotateY(180deg);
+    background: #1e1e1e;
+    border-color: #667eea;
 
-    .text {
-      color: #a3bffa;
-    }
+    .hint { color: #667eea; }
+    .text { color: #e0e0e0; font-size: 1.4rem; }
   }
 }
 
@@ -135,36 +146,41 @@
   z-index: 10;
 
   button {
-    padding: 12px 28px;
-    background: #2d2d2d;
-    border: 1px solid #444;
-    color: #fff;
+    padding: 12px 24px;
     border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.2s;
-    min-width: 100px;
+    min-width: 110px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  button:not(.flip-btn) {
+    background: transparent;
+    border: 1px solid #444;
+    color: #bbb;
 
     &:hover:not(:disabled) {
-      background: #3e3e3e;
-      border-color: #667eea;
+      background: #333;
+      color: #fff;
+      border-color: #666;
     }
 
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
 
-    &.flip-btn {
-      background: #667eea;
-      border-color: #667eea;
-      &:hover { background: #5a6fd6; }
+  .flip-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 1px solid #764ba2;
+    color: white;
+    min-width: 140px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
   }
 }
 
-@keyframes pulse {
-  0% { opacity: 0.5; }
-  50% { opacity: 1; }
-  100% { opacity: 0.5; }
-}
+@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }

@@ -1,12 +1,13 @@
-<div class="upload-wrapper">
+<div class="upload-layout">
+  <h2>Upload Document</h2>
 
   @if (!selectedFile()) {
     <div class="drop-zone" appDragDrop (fileDropped)="onFileDropped($event)">
       <div class="icon">☁️</div>
-      <h3>Drag & Drop your PDF here</h3>
+      <h3>Drag & Drop File</h3>
       <p>PDF, Word (.docx) or PowerPoint (.pptx)</p>
-      <p>or</p>
-      <label for="fileInput" class="browse-btn">Browse Files</label>
+
+      <label for="fileInput" class="browse-btn">Browse Computer</label>
       <input
         type="file"
         id="fileInput"
@@ -18,41 +19,57 @@
   }
 
   @if (selectedFile()) {
-    <div class="card file-info-card">
-      <div class="card-header">📄 Setup Upload</div>
-      <div class="card-body">
-        <p><strong>Name:</strong> {{ fileName() }}</p>
-        <p><strong>Size:</strong> {{ fileSize() }}</p>
+    <div class="file-card">
+      <div class="card-header">
+        <span>📄</span>
+        <span>Review Selection</span>
+      </div>
 
-        <hr>
+      <div class="card-body">
+
+        <div class="file-details">
+          <div class="detail-item">
+            <label>Filename</label>
+            <span>{{ fileName() }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Size</label>
+            <span>{{ fileSize() }}</span>
+          </div>
+        </div>
+
+        <hr class="divider">
 
         <div class="category-section">
-          <label>Category (Optional):</label>
+          <label>Category (Optional)</label>
 
           @if (!isAddingNewCategory()) {
             <div class="input-group">
               <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)">
-                <option value="">-- No Category --</option>
+                <option value="">-- Select Category --</option>
                 @for (cat of existingCategories(); track cat) {
                   <option [value]="cat">{{ cat }}</option>
                 }
               </select>
-              <button class="toggle-btn" (click)="toggleNewCategory()">+ New Type</button>
+              <button class="toggle-btn" (click)="toggleNewCategory()">+ New</button>
             </div>
           } @else {
             <div class="input-group">
-              <input type="text" placeholder="Enter new type..."
+              <input type="text" placeholder="Type category name..."
                      [ngModel]="newCategoryInput()" (ngModelChange)="newCategoryInput.set($event)">
-              <button class="toggle-btn secondary" (click)="toggleNewCategory()">Cancel</button>
+              <button class="toggle-btn" (click)="toggleNewCategory()">Cancel</button>
             </div>
           }
         </div>
 
         <div class="actions">
-          <button class="upload-btn" (click)="startUpload()" [disabled]="isLoading()">
-            {{ isLoading() ? 'Uploading...' : '🚀 Start Upload' }}
+          <button class="secondary-btn" (click)="selectedFile.set(null)" [disabled]="isLoading()">
+            Cancel
           </button>
-          <button class="cancel-btn" (click)="selectedFile.set(null)" [disabled]="isLoading()">Cancel</button>
+
+          <button class="primary-btn" (click)="startUpload()" [disabled]="isLoading()">
+            {{ isLoading() ? 'Uploading...' : 'Confirm Upload 🚀' }}
+          </button>
         </div>
 
       </div>

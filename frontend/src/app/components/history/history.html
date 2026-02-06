@@ -7,7 +7,7 @@
 
     <div class="filter-container">
       <select [(ngModel)]="selectedFilter">
-        <option value="ALL">Show All</option>
+        <option value="ALL">Show All Categories</option>
         @for (cat of categories(); track cat) {
           <option [value]="cat">{{ cat }}</option>
         }
@@ -26,7 +26,7 @@
             <span class="filename" title="{{item.filename}}">{{ item.filename }}</span>
             <span class="date">{{ item.upload_date | date:'shortDate' }}</span>
           </div>
-          <button class="delete-btn" (click)="deleteDoc($event, item)" title="Delete">🗑️</button>
+          <button class="delete-btn" (click)="deleteDoc($event, item)" title="Delete Document">✕</button>
         </div>
       }
     </div>
@@ -37,7 +37,7 @@
     @if (!selectedDocId()) {
       <div class="placeholder-state">
         <span class="icon">👈</span>
-        <p>Select a document to start studying.</p>
+        <p>Select a document from the sidebar.</p>
       </div>
     } @else {
 
@@ -47,8 +47,8 @@
         </div>
 
         <div class="view-toggle">
-          <button [class.active]="!showChat()" (click)="showChat.set(false)">📝 Summary</button>
-          <button [class.active]="showChat()" (click)="showChat.set(true)">💬 Chat Tutor</button>
+          <button [class.active]="!showChat()" (click)="showChat.set(false)">📄 Summary</button>
+          <button [class.active]="showChat()" (click)="showChat.set(true)">💬 AI Tutor</button>
         </div>
       </div>
 
@@ -61,13 +61,14 @@
             </div>
 
             <div class="action-bar">
-              <button class="flashcard-btn" (click)="startFlashcards()" [disabled]="isGeneratingCards()">
+              <button (click)="startFlashcards()" [disabled]="isGeneratingCards()">
                 @if (isGeneratingCards()) { <div class="spinner"></div> Creating... }
-                @else { 🎴 Study Flashcards }
+                @else { <span>🎴</span> Generate Flashcards }
               </button>
-              <button class="quiz-btn" (click)="generateQuiz()" [disabled]="isGeneratingQuiz()">
+
+              <button (click)="generateQuiz()" [disabled]="isGeneratingQuiz()">
                 @if (isGeneratingQuiz()) { <div class="spinner"></div> Generating... }
-                @else { ✨ Generate Quiz }
+                @else { <span>✨</span> Generate Quiz }
               </button>
             </div>
           </div>
@@ -78,14 +79,14 @@
             <div class="chat-messages" #scrollContainer>
               @if(chatMessages().length === 0) {
                 <div class="chat-empty">
-                  <p>Ask a question about this document!</p>
+                  <p>Ask a question about this document to get started!</p>
                 </div>
               }
 
               @for (msg of chatMessages(); track $index) {
                 <div class="msg-row" [class.user]="msg.role === 'user'">
                   <div class="msg-bubble">
-                    <div class="sender">{{ msg.role === 'user' ? 'You' : 'AI' }}</div>
+                    <div class="sender">{{ msg.role === 'user' ? 'You' : 'AI Assistant' }}</div>
                     <markdown [data]="msg.text"></markdown>
                   </div>
                 </div>
@@ -93,7 +94,9 @@
 
               @if (isChatLoading()) {
                 <div class="msg-row ai">
-                  <div class="msg-bubble loading">Thinking...</div>
+                  <div class="msg-bubble loading">
+                    <span>Thinking...</span>
+                  </div>
                 </div>
               }
             </div>
@@ -103,7 +106,7 @@
                 <input
                   [(ngModel)]="chatInput"
                   (keyup.enter)="sendMessage()"
-                  placeholder="Ask a question..."
+                  placeholder="Type your question here..."
                   [disabled]="isChatLoading()"
                 >
                 <button (click)="sendMessage()" [disabled]="!chatInput() || isChatLoading()">

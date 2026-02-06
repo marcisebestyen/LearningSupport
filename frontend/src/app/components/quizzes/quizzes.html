@@ -10,6 +10,7 @@
   <div class="quiz-grid">
     @for (quiz of quizzes(); track quiz.id) {
       <div class="quiz-card" [class.passed]="quiz.passed">
+
         <div class="card-header">
           <h3>{{ quiz.document.filename }}</h3>
           <span class="badge" [class.success]="quiz.passed">
@@ -19,19 +20,22 @@
 
         <div class="card-stats">
           <div class="stat">
-            <span class="label">Top Score</span>
             <span class="value">{{ quiz.top_score }} / 10</span>
+            <span class="label">Top Score</span>
+          </div>
+          <div class="icon">
+            🎯
           </div>
         </div>
 
         <div class="card-actions">
           <button class="primary-btn" (click)="playQuiz(quiz.id)">
-            {{ quiz.top_score > 0 ? 'Retake Quiz' : 'Start Quiz' }}
+            {{ quiz.top_score > 0 ? 'Retake' : 'Start' }}
           </button>
 
           @if (quiz.passed) {
             <button class="secondary-btn" (click)="reviewQuiz(quiz.id)">
-              Check Answers 👁️
+              Review
             </button>
           }
         </div>

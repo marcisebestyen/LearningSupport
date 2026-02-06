@@ -1,31 +1,60 @@
-<div class="auth-container">
-  <h2>{{ isRegisterMode() ? 'Create Account' : 'Welcome Back' }}</h2>
+<div class="login-layout">
 
-  @if (isSuccessful()) {
-    <div class="success">{{ errorMessage() }}</div>
-  }
-
-  @if (!isSuccessful()) {
-    <div class="error">{{ errorMessage() }}</div>
-  }
-
-  <form (submit)="onSubmit(); $event.preventDefault()">
-    <div class="form-group">
-      <label>Username</label>
-      <input type="text" [ngModel]="username()" (ngModelChange)="username.set($event)" name="username" required>
+  <div class="auth-card">
+    <div class="card-header">
+      <h2>{{ isRegisterMode() ? 'Create Account' : 'Welcome Back' }}</h2>
+      <p class="subtitle">
+        {{ isRegisterMode() ? 'Start your learning journey today.' : 'Enter your credentials to access your workspace.' }}
+      </p>
     </div>
 
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" [ngModel]="password()" (ngModelChange)="password.set($event)" name="password" required>
+    @if (isSuccessful()) {
+      <div class="success">
+        <span>✅</span> {{ errorMessage() }}
+      </div>
+    }
+
+    @if (!isSuccessful() && errorMessage()) {
+      <div class="error">
+        <span>⚠️</span> {{ errorMessage() }}
+      </div>
+    }
+
+    <form (submit)="onSubmit(); $event.preventDefault()">
+      <div class="form-group">
+        <label>Username</label>
+        <input
+          type="text"
+          [ngModel]="username()"
+          (ngModelChange)="username.set($event)"
+          name="username"
+          placeholder="Enter your username"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input
+          type="password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          name="password"
+          placeholder="Enter your password"
+          required>
+      </div>
+
+      <button type="submit" class="primary-btn">
+        {{ isRegisterMode() ? 'Sign Up 🚀' : 'Log In 🔐' }}
+      </button>
+    </form>
+
+    <div class="toggle-text" (click)="toggleMode()">
+      @if (isRegisterMode()) {
+        Already have an account? <span class="link-highlight">Log In</span>
+      } @else {
+        Don't have an account? <span class="link-highlight">Sign Up</span>
+      }
     </div>
+  </div>
 
-    <button type="submit" class="primary">
-      {{ isRegisterMode() ? 'Sign Up' : 'Log In' }}
-    </button>
-  </form>
-
-  <p class="toggle-text" (click)="toggleMode()">
-    {{ isRegisterMode() ? 'Already have an account? Log In' : "Don't have an account? Sign Up" }}
-  </p>
 </div>
