@@ -21,6 +21,8 @@ export class AppComponent {
     if (url.includes('login')) return 'Authentication';
     if (url.includes('quiz-player')) return 'Quiz Session';
     if (url.includes('quizzes')) return 'My Quizzes';
+    if (url.includes('flashcard-player')) return 'Flashcard Session';
+    if (url.includes('flashcards')) return 'My Flashcards';
     return 'Welcome';
   });
 

@@ -1,114 +1,154 @@
-.upload-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
+.upload-layout {
+  padding: 20px;
+  width: 100%;
+  height: 83.75vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background-color: #1e1e1e;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  h2 {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+    text-align: left;
+  }
 }
 
 .drop-zone {
-  border: 3px dashed #cbd5e0;
+  width: 100%;
+  max-width: 600px;
+  border: 2px dashed #444;
   border-radius: 12px;
-  padding: 3rem;
+  padding: 4rem 2rem;
   text-align: center;
-  background: white;
+  background: #252526;
   transition: all 0.3s ease;
-  color: #718096;
+  color: #aaa;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 
-  &.file-over {
-    border-color: #3498db;
-    background-color: #ebf8ff;
-    transform: scale(1.02);
+  &:hover, &.file-over {
+    border-color: #667eea;
+    background-color: rgba(102, 126, 234, 0.05);
+    transform: translateY(-2px);
+    color: #fff;
   }
 
   .icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 4rem;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
   }
 
   h3 {
     margin: 0;
-    color: #2d3748;
+    color: #e0e0e0;
+    font-size: 1.5rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #888;
+    margin: 0;
   }
 
   .browse-btn {
-    display: inline-block;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     padding: 10px 25px;
-    background: #3498db;
-    color: white;
+    background: transparent;
+    border: 1px solid #667eea;
+    color: #667eea;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+    transition: all 0.2s;
 
     &:hover {
-      background: #2980b9;
+      background: #667eea;
+      color: white;
     }
   }
 }
 
-.card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 2rem;
+.file-card {
+  width: 100%;
+  max-width: 600px;
+  background: #252526;
+  border: 1px solid #333;
+  border-radius: 12px;
   overflow: hidden;
-  animation: fadeIn 0.5s ease-out;
-}
+  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 
-.card-header {
-  background: #f7fafc;
-  padding: 15px 20px;
-  border-bottom: 1px solid #edf2f7;
-  font-weight: bold;
-  color: #2d3748;
-  font-size: 1.1rem;
-}
-
-.card-body {
-  padding: 20px;
-}
-
-.ai-content {
-  white-space: pre-wrap;
-  line-height: 1.6;
-  color: #2d3748;
-  font-size: 1.05rem;
-}
-
-.badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: bold;
-}
-
-.badge.loading {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.badge.success {
-  background: #d4edda;
-  color: #155724;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  .card-header {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+    font-weight: bold;
+    color: #e0e0e0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
+}
+
+.file-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    span {
+      color: #fff;
+      font-weight: 500;
+      font-size: 1rem;
+    }
+  }
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid #333;
+  margin: 0;
 }
 
 .category-section {
-  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 
   label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    color: #4a5568;
+    font-size: 0.9rem;
+    color: #ccc;
   }
 
   .input-group {
@@ -118,52 +158,81 @@
     select, input {
       flex: 1;
       padding: 10px;
-      border: 1px solid #cbd5e0;
+      background: #1e1e1e;
+      border: 1px solid #444;
       border-radius: 6px;
-      font-size: 1rem;
+      font-size: 0.95rem;
+      color: #fff;
+      outline: none;
+
+      &:focus {
+        border-color: #667eea;
+      }
     }
 
     .toggle-btn {
       padding: 0 15px;
-      background: #edf2f7;
-      border: 1px solid #cbd5e0;
+      background: #333;
+      border: 1px solid #444;
+      color: #ccc;
       border-radius: 6px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 500;
+      white-space: nowrap;
 
-      &:hover { background: #e2e8f0; }
-      &.secondary { color: #e53e3e; }
+      &:hover {
+        background: #444;
+        color: #fff;
+      }
     }
   }
 }
 
 .actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 20px;
+  gap: 15px;
+  margin-top: 10px;
 
   button {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.1s;
-
-    &:active { transform: scale(0.98); }
-  }
-
-  .upload-btn {
-    background: #48bb78;
-    color: white;
     flex: 1;
-    &:hover { background: #38a169; }
-    &:disabled { background: #9ae6b4; cursor: not-allowed; }
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #444;
+    transition: all 0.2s;
+    font-size: 1rem;
   }
 
-  .cancel-btn {
-    background: #fc8181;
-    color: white;
-    &:hover { background: #f56565; }
+  .primary-btn {
+    background: linear-gradient(135deg, #2d3748 0%, #252526 100%);
+    color: #bbb;
+
+    &:hover:not(:disabled) {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
+
+  .secondary-btn {
+    background: transparent;
+    color: #888;
+
+    &:hover:not(:disabled) {
+      background: #333;
+      color: #ef5350; // Red tint for Cancel
+      border-color: #ef5350;
+    }
+  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }

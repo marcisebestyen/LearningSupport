@@ -2,29 +2,32 @@
 
   <aside class="sidebar">
     <div class="brand">
-      <div class="logo-icon">📄</div>
+      <div class="logo-icon">✨</div>
       <h2>DocAI</h2>
     </div>
 
     <ul class="nav-links">
       @if (authService.isLoggedIn()) {
         <li routerLink="/upload" routerLinkActive="active">
-          <span class="icon">☁️</span> Upload Document
+          <span class="icon">☁️</span>
+          <span>Upload Document</span>
         </li>
         <li routerLink="/history" routerLinkActive="active">
-          <span class="icon">📚</span> My History
+          <span class="icon">📂</span>
+          <span>My History</span>
         </li>
         <li routerLink="/quizzes" routerLinkActive="active">
-          <span class="icon">🧠</span> Quizzes
+          <span class="icon">🧠</span>
+          <span>Quizzes</span>
         </li>
         <li routerLink="/flashcards" routerLinkActive="active">
-          <span class="icon">🔦</span> Flashcards
+          <span class="icon">🎴</span>
+          <span>Flashcards</span>
         </li>
-      }
-
-      @else {
+      } @else {
         <li routerLink="/login" routerLinkActive="active">
-          <span class="icon">🔐</span> Login / Register
+          <span class="icon">🔐</span>
+          <span>Login / Register</span>
         </li>
       }
     </ul>
@@ -32,7 +35,8 @@
     @if (authService.isLoggedIn()) {
       <div class="sidebar-footer">
         <button (click)="handleLogout()" class="logout-btn">
-          <span class="icon">🚪</span> Logout
+          <span class="icon">🚪</span>
+          <span>Sign Out</span>
         </button>
       </div>
     }
@@ -41,8 +45,9 @@
   <main class="content">
     <header class="top-bar">
       <h1>{{ currentRouteName() }}</h1>
+
       <div class="user-status">
-        <div class="status-dot" [class.online]="authService.isLoggedIn()"></div>
+        <div class="status-dot" [class.offline]="!authService.isLoggedIn()"></div>
         {{ authService.isLoggedIn() ? 'Online' : 'Guest' }}
       </div>
     </header>
