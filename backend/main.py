@@ -202,3 +202,24 @@ def submit_quiz_score(
     if not result:
         raise HTTPException(status_code=404, detail="Quiz not found")
     return result
+
+
+@app.post("/documents/{doc_id}/chat")
+def chat_with_document(
+        doc_id: int,
+        chat_req: schemas.ChatRequest,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.ChatService(db)
+    answer = service.ask_document(doc_id, chat_req.question)
+    return {"answer": answer}
+
+@app.get("/documents/{doc_id}/chat", response_model=List[schemas.ChatMessageResponse])
+def get_chat_history(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.ChatService(db)
+    return service.get_chat_history(doc_id)

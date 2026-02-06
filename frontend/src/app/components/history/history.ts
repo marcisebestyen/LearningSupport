@@ -1,4 +1,4 @@
-import { Component, signal, inject, computed } from '@angular/core';
+import { Component, signal, inject, computed, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpRequestService } from '../../services/http-request.service';
@@ -13,7 +13,7 @@ import { finalize } from 'rxjs';
   templateUrl: './history.html',
   styleUrl: './history.scss'
 })
-export class HistoryComponent {
+export class HistoryComponent implements AfterViewChecked {
   private httpService = inject(HttpRequestService);
   private router = inject(Router);
 
@@ -36,6 +36,10 @@ export class HistoryComponent {
 
     return list.filter(doc => doc.category === filter);
   });
+  chatMessages = signal<{role: 'user' | 'ai', text: string}[]>([]);
+  chatInput = signal('');
+  isChatLoading = signal(false);
+  showChat = signal(false);
 
   ngOnInit() {
     this.loadHistory();
@@ -54,10 +58,37 @@ export class HistoryComponent {
       });
   }
 
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+
   selectDoc(item: any) {
     this.selectedSummary.set(item.summary);
     this.selectedFilename.set(item.filename);
     this.selectedDocId.set(item.id);
+    this.showChat.set(false);
+
+    this.loadChatHistory(item.id);
+  }
+
+  loadChatHistory(docId: number) {
+    this.httpService.loadChatHistoryRequest(docId)
+      .subscribe({
+        next: (msgs) => {
+          const formatted = msgs.map(m => ({ role: m.role, text: m.content }));
+          this.chatMessages.set(formatted);
+        }
+      });
+  }
+
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  scrollToBottom(): void {
+    try {
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
+      }
+    } catch (error) { }
   }
 
   deleteDoc(event: Event, item: any) {
@@ -112,5 +143,29 @@ export class HistoryComponent {
           console.error('Quiz generation failed: ', error);
         }
       })
+  }
+
+  sendMessage() {
+    const text = this.chatInput();
+    if (!text.trim() || !this.selectedDocId()) {
+      return;
+    }
+
+    this.chatMessages.update(msgs => [...msgs, { role: 'user', text }]);
+    this.chatInput.set('');
+    this.isChatLoading.set(true);
+
+    this.httpService.chatWithDocRequest(this.selectedDocId()!, text)
+      .pipe(
+        finalize(() => this.isChatLoading.set(false))
+      )
+      .subscribe({
+        next: (res) => {
+          this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]);
+        },
+        error: (error) => {
+          console.error('Failed to update chat: ', error);
+        }
+      });
   }
 }
