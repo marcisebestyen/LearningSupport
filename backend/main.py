@@ -14,6 +14,7 @@ from database import engine
 import models
 from typing import List
 from pydantic import BaseModel
+from fastapi import Form
 
 load_dotenv()
 
@@ -78,19 +79,36 @@ def login(username: str, password: str, db: Session = Depends(database.get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 
+ALLOWED_MIME_TYPES = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+]
+
 @app.post("/upload/")
 async def upload_file(
         file: UploadFile = File(...),
+        category: str = Form(None),
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
 ):
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="PDF required")
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: PDF, DOCX, PPTX. Got: {file.content_type}"
+        )
 
-    content = doc_service.extract_text(await file.read())
+    file_bytes = await file.read()
+    try:
+        content = doc_service.extract_text(file_bytes, file.filename)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"Extraction error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process file content")
+
     summary = doc_service.generate_summary(content)
-
-    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id)
+    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category)
     return doc
 
 

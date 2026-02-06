@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -19,12 +19,24 @@ export class HttpRequestService {
     return this.http.post<any>(`${this.baseUrl}/login?username=${username}&password=${password}`, {});
   }
 
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+    })
+  }
+
   // document services
 
-  uploadFileRequest(file: File) {
+  uploadFileRequest(file: File, category: string = '') {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<any>(`${this.baseUrl}/upload/`, formData);
+
+    if (category && category.trim() !== '') {
+      formData.append('category', category);
+    }
+
+    return this.http.post<any>(`${this.baseUrl}/upload/`, formData, { headers: this.getHeaders() });
   }
 
   loadHistoryRequest() {

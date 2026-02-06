@@ -1,12 +1,19 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
 
-class DocumentResponse(BaseModel):
-    id: int
+class DocumentBase(BaseModel):
     filename: str
-    summary: Optional[str] = None
+    content: str
+    summary: str | None = None
+    category: str | None = None
+
+class DocumentCreate(DocumentBase):
+    pass
+
+class DocumentResponse(DocumentBase):
+    id: int
     upload_date: datetime
+    category: str | None = None
 
     class Config:
         from_attributes = True

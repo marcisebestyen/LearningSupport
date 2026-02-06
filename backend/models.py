@@ -25,6 +25,7 @@ class Document(Base):
     content = Column(Text, nullable=False)
     summary = Column(Text, nullable=True)
     embedding = Column(Vector(768), nullable=True)
+    category = Column(String, nullable=True)
 
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="documents")

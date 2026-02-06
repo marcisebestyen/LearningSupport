@@ -3,11 +3,21 @@
   <div class="history-list">
     <h3>Previous Uploads</h3>
 
+    <div class="filter-container">
+      <label>Filter by Category:</label>
+      <select [(ngModel)]="selectedFilter">
+        <option value="ALL">Show All</option>
+        @for (cat of categories(); track cat) {
+          <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
+    </div>
+
     @if (history().length === 0) {
       <p class="empty-msg">No documents found.</p>
     }
 
-    @for (item of history(); track item.id) {
+    @for (item of filteredHistory(); track item.id) {
       <div
         class="history-item"
         [class.selected]="selectedDocId() === item.id"
