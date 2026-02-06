@@ -64,4 +64,14 @@ export class HttpRequestService {
   submitQuizRequest(quizId: string, score: number) {
     return this.http.post(`http://127.0.0.1:8000/quizzes/${quizId}/submit`, { score: score });
   }
+
+  // chat services
+
+  chatWithDocRequest(docId: number, question: string) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/chat`, { question });
+  }
+
+  loadChatHistoryRequest(docId: number) {
+    return this.http.get<any[]>(`${this.baseUrl}/documents/${docId}/chat`);
+  }
 }

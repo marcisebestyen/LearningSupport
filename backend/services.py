@@ -8,6 +8,7 @@ import json
 from google.generativeai.types import GenerationConfig
 from docx import Document as DocxDocument
 from pptx import Presentation
+from sqlalchemy import text as sql_text
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
@@ -15,6 +16,7 @@ class DocumentService:
     def __init__(self):
         genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
         self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.embedding_model = "models/gemini-embedding-001"
 
     def extract_text(self, file_bytes: bytes, filename: str) -> str:
         ext = filename.split('.')[-1].lower()
@@ -34,7 +36,7 @@ class DocumentService:
 
     def _extract_from_docx(self, file_bytes: bytes):
         cod = DocxDocument(io.BytesIO(file_bytes))
-        return "/n".join([para.text for para in cod.paragraphs])
+        return "\n".join([para.text for para in cod.paragraphs])
 
     def _extract_from_pptx(self, file_bytes: bytes):
         prs = Presentation(io.BytesIO(file_bytes))
@@ -45,7 +47,7 @@ class DocumentService:
                 if hasattr(shape, "text"):
                     text_content.append(shape.text)
 
-        return "/n".join(text_content)
+        return "\n".join(text_content)
 
     def generate_summary(self, text: str) -> str:
         prompt = f"""
@@ -77,7 +79,33 @@ class DocumentService:
         db.add(new_doc)
         db.commit()
         db.refresh(new_doc)
+
+        chunks = self._chunk_text(content)
+        for idx, chunk_text in enumerate(chunks):
+            vector = self._get_embedding(chunk_text)
+
+            db_chunk = models.DocumentChunk(
+                document_id=new_doc.id,
+                chunk_index=idx,
+                content=chunk_text,
+                embedding=vector,
+            )
+            db.add(db_chunk)
+
+        db.commit()
         return new_doc
+
+    def _chunk_text(self, text: str, chunk_size: int = 1000) -> list[str]:
+        return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
+    def _get_embedding(self, text: str):
+        result = genai.embed_content(
+            model=self.embedding_model,
+            content=text,
+            # task_type="retrieval_document"
+            output_dimensionality=768
+        )
+        return result['embedding']
 
     def get_user_history(self, db: Session, user_id: int):
         return db.query(models.Document).filter(models.Document.owner_id == user_id).all()
@@ -240,3 +268,55 @@ class QuizService:
             return quiz
         return None
 
+
+class ChatService:
+    def __init__(self, db: Session):
+        self.db = db
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
+
+    def ask_document(self, doc_id: int, question: str):
+        usr_msg = models.ChatMessage(document_id=doc_id, role='user', content=question)
+        self.db.add(usr_msg)
+        self.db.commit()
+
+        q_embedding = genai.embed_content(
+            model='models/gemini-embedding-001',
+            content=question,
+            # task_type='retrieval_query'
+            output_dimensionality=768
+        )['embedding']
+
+        query = sql_text("""
+            SELECT content
+            FROM document_chunks
+            WHERE document_id = :doc_id
+            ORDER BY embedding <=> :q_embedding
+            LIMIT 3
+        """)
+
+        results = self.db.execute(query, {"doc_id": doc_id, "q_embedding": str(q_embedding)}).fetchall()
+        context_text = "\n\n".join([row[0] for row in results])
+
+        prompt = f"""
+        You are a helpful tutor. Answer the question based ONLY on the context below.
+        
+        Context: 
+        {context_text}
+        
+        Question: {question}
+        Answer (in Hungarian):
+        """
+
+        response = self.model.generate_content(prompt)
+        answer_text = response.text
+
+        ai_msg = models.ChatMessage(document_id=doc_id, role='ai', content=answer_text)
+        self.db.add(ai_msg)
+        self.db.commit()
+
+        return answer_text
+
+    def get_chat_history(self, doc_id: int):
+        return (self.db.query(models.ChatMessage)
+                .filter(models.ChatMessage.document_id == doc_id)
+                .order_by(models.ChatMessage.created_at.asc()).all())

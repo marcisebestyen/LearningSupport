@@ -17,3 +17,13 @@ class DocumentResponse(DocumentBase):
 
     class Config:
         from_attributes = True
+
+class ChatRequest(BaseModel):
+    question: str
+
+class ChatResponse(BaseModel):
+    answer: str
+
+class ChatMessageResponse(BaseModel):
+    role: str
+    content: str

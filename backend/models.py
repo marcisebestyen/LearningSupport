@@ -30,6 +30,19 @@ class Document(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="documents")
     quizzes = relationship("Quiz", back_populates="document", cascade="all, delete-orphan")
+    chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
+    messages = relationship("ChatMessage", back_populates="document", cascade="all, delete-orphan")
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id"))
+    role = Column(String)
+    content = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    document = relationship("Document", back_populates="messages")
 
 
 class Quiz(Base):
@@ -62,3 +75,15 @@ class Question(Base):
     correct_answer = Column(String, nullable=False)
 
     quiz = relationship("Quiz", back_populates="questions")
+
+
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id"))
+    chunk_index = Column(Integer)
+    content = Column(Text, nullable=False)
+    embedding = Column(Vector(768))
+
+    document = relationship("Document", back_populates="chunks")

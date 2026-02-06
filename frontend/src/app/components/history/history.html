@@ -1,10 +1,11 @@
 <div class="history-layout">
 
-  <div class="history-list">
-    <h3>Previous Uploads</h3>
+  <div class="history-sidebar">
+    <div class="sidebar-header">
+      <h3>Previous Uploads</h3>
+    </div>
 
     <div class="filter-container">
-      <label>Filter by Category:</label>
       <select [(ngModel)]="selectedFilter">
         <option value="ALL">Show All</option>
         @for (cat of categories(); track cat) {
@@ -13,47 +14,101 @@
       </select>
     </div>
 
-    @if (history().length === 0) {
-      <p class="empty-msg">No documents found.</p>
-    }
+    <div class="sidebar-list">
+      @if (history().length === 0) {
+        <p class="empty-msg">No documents found.</p>
+      }
 
-    @for (item of filteredHistory(); track item.id) {
-      <div
-        class="history-item"
-        [class.selected]="selectedDocId() === item.id"
-        (click)="selectDoc(item)">
-        <div class="doc-icon">📄</div>
-        <div class="doc-info">
-          <span class="filename">{{ item.filename }}</span>
-          <span class="date">{{ item.upload_date | date:'shortDate' }}</span>
+      @for (item of filteredHistory(); track item.id) {
+        <div class="history-item" [class.selected]="selectedDocId() === item.id" (click)="selectDoc(item)">
+          <div class="doc-icon">📄</div>
+          <div class="doc-info">
+            <span class="filename" title="{{item.filename}}">{{ item.filename }}</span>
+            <span class="date">{{ item.upload_date | date:'shortDate' }}</span>
+          </div>
+          <button class="delete-btn" (click)="deleteDoc($event, item)" title="Delete">🗑️</button>
         </div>
-        <button class="delete-btn" (click)="deleteDoc($event, item)" title="Delete">🗑️</button>
-      </div>
-    }
+      }
+    </div>
   </div>
 
-  <div class="history-content">
-    @if (selectedSummary()) {
-      <div class="summary-card">
-        <h2>Summary: {{ selectedFilename() }}</h2>
-        <div class="markdown-body">
-          <markdown [data]="selectedSummary()"></markdown>
-        </div>
-        <div class="action-bar">
-          <button class="quiz-btn" (click)="generateQuiz()" [disabled]="isGeneratingQuiz()">
-            @if (isGeneratingQuiz()) {
-              <div class="spinner"></div>
-              Generating...
-            } @else {
-              ✨ Generate Quiz
-            }
-          </button>
-        </div>
+  <div class="history-main">
+
+    @if (!selectedDocId()) {
+      <div class="placeholder-state">
+        <span class="icon">👈</span>
+        <p>Select a document to start studying.</p>
       </div>
     } @else {
-      <div class="placeholder">
-        <span class="icon">👈</span>
-        <p>Select a document from the list to view its summary.</p>
+
+      <div class="main-header">
+        <div class="doc-title">
+          <h2>{{ selectedFilename() }}</h2>
+        </div>
+
+        <div class="view-toggle">
+          <button [class.active]="!showChat()" (click)="showChat.set(false)">📝 Summary</button>
+          <button [class.active]="showChat()" (click)="showChat.set(true)">💬 Chat Tutor</button>
+        </div>
+      </div>
+
+      <div class="content-body">
+
+        @if (!showChat()) {
+          <div class="summary-container fade-in">
+            <div class="markdown-body">
+              <markdown [data]="selectedSummary()"></markdown>
+            </div>
+
+            <div class="action-bar">
+              <button class="quiz-btn" (click)="generateQuiz()" [disabled]="isGeneratingQuiz()">
+                @if (isGeneratingQuiz()) { <div class="spinner"></div> Generating... }
+                @else { ✨ Generate Quiz }
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (showChat()) {
+          <div class="chat-wrapper fade-in">
+            <div class="chat-messages" #scrollContainer>
+              @if(chatMessages().length === 0) {
+                <div class="chat-empty">
+                  <p>Ask a question about this document!</p>
+                </div>
+              }
+
+              @for (msg of chatMessages(); track $index) {
+                <div class="msg-row" [class.user]="msg.role === 'user'">
+                  <div class="msg-bubble">
+                    <div class="sender">{{ msg.role === 'user' ? 'You' : 'AI' }}</div>
+                    <markdown [data]="msg.text"></markdown>
+                  </div>
+                </div>
+              }
+
+              @if (isChatLoading()) {
+                <div class="msg-row ai">
+                  <div class="msg-bubble loading">Thinking...</div>
+                </div>
+              }
+            </div>
+
+            <div class="chat-input-area">
+              <div class="input-box">
+                <input
+                  [(ngModel)]="chatInput"
+                  (keyup.enter)="sendMessage()"
+                  placeholder="Ask a question..."
+                  [disabled]="isChatLoading()"
+                >
+                <button (click)="sendMessage()" [disabled]="!chatInput() || isChatLoading()">
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
   </div>
