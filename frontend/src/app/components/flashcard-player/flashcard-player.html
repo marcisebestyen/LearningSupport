@@ -1,0 +1,43 @@
+<div class="player-layout">
+
+  <div class="header">
+    <button class="exit-btn" (click)="exit()">✕ Exit Study Mode</button>
+    <div class="progress">Card {{ currentIndex() + 1 }} of {{ cards().length }}</div>
+  </div>
+
+  <div class="scene-container">
+    @if (isLoading()) {
+      <div class="loading">Loading cards...</div>
+    } @else {
+
+      @if (cards().length > 0) {
+
+        <div class="card-scene">
+          <div class="card-object" [class.flipped]="isFlipped()" (click)="flipCard()">
+            <div class="card-face front">
+              <span class="hint">Term</span>
+              <div class="text">{{ cards()[currentIndex()].front }}</div>
+              <span class="click-hint">Click to flip</span>
+            </div>
+
+            <div class="card-face back">
+              <span class="hint">Definition</span>
+              <div class="text">{{ cards()[currentIndex()].back }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button (click)="previousCard()" [disabled]="currentIndex() === 0">Previous</button>
+          <button class="flip-btn" (click)="flipCard()">Flip Card ⟳</button>
+          <button (click)="nextCard()" [disabled]="currentIndex() === cards().length - 1">Next</button>
+        </div>
+
+      } @else {
+        <div class="empty-state">
+          <p>This set has no cards.</p>
+        </div>
+      }
+    }
+  </div>
+</div>

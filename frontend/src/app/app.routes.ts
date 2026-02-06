@@ -4,6 +4,8 @@ import { HistoryComponent } from './components/history/history';
 import { LoginComponent } from './components/login/login';
 import { QuizzesComponent } from './components/quizzes/quizzes';
 import { QuizPlayerComponent } from './components/quiz-player/quiz-player';
+import { FlashcardsComponent } from './components/flashcards/flashcards';
+import { FlashcardPlayerComponent } from './components/flashcard-player/flashcard-player';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'upload', pathMatch: 'full' },
@@ -12,4 +14,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'quizzes', component: QuizzesComponent },
   { path: 'quiz-player/:id', component: QuizPlayerComponent },
+  { path: 'flashcards', component: FlashcardsComponent },
+  { path: 'flashcard-player/:id', component: FlashcardPlayerComponent },
 ];

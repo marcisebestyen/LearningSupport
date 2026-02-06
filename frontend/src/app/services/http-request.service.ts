@@ -65,6 +65,18 @@ export class HttpRequestService {
     return this.http.post(`http://127.0.0.1:8000/quizzes/${quizId}/submit`, { score: score });
   }
 
+  generateFlashcardRequest(docId: number) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/flashcards`, {});
+  }
+
+  getFlashcardSetRequest(setId: string) {
+    return this.http.get<any[]>(`${this.baseUrl}/flashcards/${setId}`);
+  }
+
+  loadFlashcardsRequest() {
+    return this.http.get<any[]>(`${this.baseUrl}/flashcards-list`);
+  }
+
   // chat services
 
   chatWithDocRequest(docId: number, question: string) {

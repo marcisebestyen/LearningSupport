@@ -148,11 +148,45 @@
   border-top: 1px solid #333;
   display: flex;
   justify-content: flex-end;
+  gap: 1.5rem;
+
+  .flashcard-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #3e3e3e;
+      border-color: #4fd1c5;
+      color: #4fd1c5;
+    }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
 
   .quiz-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
     &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
   }
 }
 

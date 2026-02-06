@@ -40,6 +40,7 @@ export class HistoryComponent implements AfterViewChecked {
   chatInput = signal('');
   isChatLoading = signal(false);
   showChat = signal(false);
+  isGeneratingCards = signal(false);
 
   ngOnInit() {
     this.loadHistory();
@@ -143,6 +144,28 @@ export class HistoryComponent implements AfterViewChecked {
           console.error('Quiz generation failed: ', error);
         }
       })
+  }
+
+  startFlashcards() {
+    const docId = this.selectedDocId();
+    if (!docId) return;
+
+    this.isGeneratingCards.set(true);
+
+    this.httpService.generateFlashcardRequest(docId)
+      .pipe(
+        finalize(() => {
+          this.isGeneratingCards.set(false);
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          this.router.navigate(['/flashcard-player', res.set_id]);
+        },
+        error: (error) => {
+          console.error('Failed to start flashcards: ', error);
+        }
+      });
   }
 
   sendMessage() {

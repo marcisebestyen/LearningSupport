@@ -1,0 +1,35 @@
+<div class="list-layout">
+  <h2>My Flashcards</h2>
+
+  @if (flashcardSets().length === 0) {
+    <div class="empty-state">
+      <p>No flashcards yet. Go to "History" and generate a set!</p>
+    </div>
+  }
+
+  <div class="grid-container">
+    @for (set of flashcardSets(); track set.id) {
+      <div class="card-item" (click)="openSet(set.id)">
+        <div class="card-header">
+          <h3>{{ set.document_filename }}</h3>
+          <span class="date">{{ set.created_at | date:'shortDate' }}</span>
+        </div>
+
+        <div class="card-stats">
+          <div class="stat">
+            <span class="value">{{ set.card_count }}</span>
+            <span class="label">Cards</span>
+          </div>
+          <div class="icon">
+            🎴
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="primary-btn">Study Now</button>
+        </div>
+
+      </div>
+    }
+  </div>
+</div>

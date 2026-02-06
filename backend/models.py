@@ -32,6 +32,7 @@ class Document(Base):
     quizzes = relationship("Quiz", back_populates="document", cascade="all, delete-orphan")
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     messages = relationship("ChatMessage", back_populates="document", cascade="all, delete-orphan")
+    flashcard_sets = relationship("FlashcardSet", back_populates="document", cascade="all, delete-orphan")
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
@@ -87,3 +88,25 @@ class DocumentChunk(Base):
     embedding = Column(Vector(768))
 
     document = relationship("Document", back_populates="chunks")
+
+
+class FlashcardSet(Base):
+    __tablename__ = "flashcard_sets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    document = relationship("Document", back_populates="flashcard_sets")
+    cards = relationship("Flashcard", back_populates="flashcard_set", cascade="all, delete-orphan")
+
+
+class Flashcard(Base):
+    __tablename__ = "flashcards"
+
+    id = Column(Integer, primary_key=True, index=True)
+    set_id = Column(Integer, ForeignKey("flashcard_sets.id"))
+    front = Column(Text, nullable=False)
+    back = Column(Text, nullable=False)
+
+    flashcard_set = relationship("FlashcardSet", back_populates="cards")
