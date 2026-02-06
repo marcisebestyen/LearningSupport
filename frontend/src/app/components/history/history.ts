@@ -1,5 +1,6 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpRequestService } from '../../services/http-request.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { Router } from '@angular/router';
@@ -8,7 +9,7 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule, MarkdownModule],
+  imports: [CommonModule, MarkdownModule, FormsModule],
   templateUrl: './history.html',
   styleUrl: './history.scss'
 })
@@ -21,6 +22,20 @@ export class HistoryComponent {
   selectedFilename = signal<string>('');
   selectedDocId = signal<number | null>(null);
   isGeneratingQuiz = signal(false);
+  selectedFilter = signal<string>('ALL');
+  categories = computed(() => {
+    return [...new Set(this.history().map(doc => doc.category).filter(c => !!c))].sort();
+  });
+  filteredHistory = computed(() => {
+    const filter = this.selectedFilter();
+    const list = this.history();
+
+    if (filter === 'ALL') {
+      return list;
+    }
+
+    return list.filter(doc => doc.category === filter);
+  });
 
   ngOnInit() {
     this.loadHistory();

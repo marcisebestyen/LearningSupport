@@ -36,12 +36,13 @@ class DocumentService:
             print(f"AI Error: {e}")
             return "Hiba történt az összefoglaló generálása közben."
 
-    def save_document(self, db: Session, filename: str, content: str, summary: str, user_id: int):
+    def save_document(self, db: Session, filename: str, content: str, summary: str, user_id: int, category: str = None):
         new_doc = models.Document(
             filename=filename,
             content=content,
             summary=summary,
-            owner_id=user_id
+            owner_id=user_id,
+            category=category
         )
         db.add(new_doc)
         db.commit()

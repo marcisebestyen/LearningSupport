@@ -14,6 +14,7 @@ from database import engine
 import models
 from typing import List
 from pydantic import BaseModel
+from fastapi import Form
 
 load_dotenv()
 
@@ -81,6 +82,7 @@ def login(username: str, password: str, db: Session = Depends(database.get_db)):
 @app.post("/upload/")
 async def upload_file(
         file: UploadFile = File(...),
+        category: str = Form(None),
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
 ):
@@ -90,7 +92,7 @@ async def upload_file(
     content = doc_service.extract_text(await file.read())
     summary = doc_service.generate_summary(content)
 
-    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id)
+    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category)
     return doc
 
 

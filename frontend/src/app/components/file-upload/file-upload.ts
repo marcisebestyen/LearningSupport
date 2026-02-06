@@ -1,71 +1,99 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { DragDropDirective } from '../../directives/drag-drop';
 import { MarkdownModule } from 'ngx-markdown';
-import { AuthService } from '../../services/auth.service';
 import { HttpRequestService } from '../../services/http-request.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-file-upload',
   standalone: true,
-  imports: [CommonModule, DragDropDirective, MarkdownModule],
+  imports: [CommonModule, DragDropDirective, MarkdownModule, FormsModule],
   templateUrl: './file-upload.html',
   styleUrl: './file-upload.scss',
 })
 export class FileUploadComponent {
+  // File state
+  selectedFile = signal<File | null>(null);
   fileName = signal<string>('');
   fileSize = signal<string>('');
+
+  // Upload state
   uploadStatus = signal<string>('');
   summary = signal<string>('');
   isLoading = signal<boolean>(false);
+
+  // Category state
+  existingCategories = signal<string[]>([]);
+  selectedCategory = signal<string>('');
+  newCategoryInput = signal<string>('');
+  isAddingNewCategory = signal<boolean>(false);
+
   history = signal<any[]>([]);
 
-  constructor(private httpService: HttpRequestService, private auth: AuthService, private router: Router) { }
+  constructor(private httpService: HttpRequestService, private router: Router) { }
 
-  onFileDropped(file: File) {
-    this.handleFile(file);
+  ngOnInit() {
+    this.httpService.loadHistoryRequest()
+      .subscribe({
+        next: (data: any[]) => {
+          const cats = [...new Set(data.map(d => d.category).filter(c => !!c))];
+          this.existingCategories.set(cats as string[]);
+        }
+      });
   }
 
-  handleFile(file: File) {
-    this.fileName.set(file.name);
-    this.fileSize.set((file.size / 1024).toFixed(2) + ' KB');
-    this.uploadFile(file);
+  onFileDropped(file: File) {
+    this.prepareFile(file);
   }
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
     if (file) {
-      this.fileName.set(file.name);
-      this.uploadFile(file);
+      this.prepareFile(file);
     }
   }
 
-  uploadFile(file: File) {
-    this.isLoading.set(true);
-    this.uploadStatus.set('Uploading and analyzing...');
-    this.summary.set('');
+  prepareFile(file: File) {
+    this.selectedFile.set(file);
+    this.fileName.set(file.name);
+    this.fileSize.set((file.size / 1024).toFixed(2) + ' KB');
+    this.uploadStatus.set('Ready to upload');
+  }
 
-    this.httpService.uploadFileRequest(file)
+  toggleNewCategory() {
+    this.isAddingNewCategory.update(v => !v);
+    this.selectedCategory.set('');
+    this.newCategoryInput.set('');
+  }
+
+  startUpload() {
+    const file = this.selectedFile();
+    if (!file) {
+      return;
+    }
+
+    let finalCategory = this.selectedCategory();
+    if (this.isAddingNewCategory()) {
+      finalCategory = this.newCategoryInput();
+    }
+
+    this.isLoading.set(true);
+    this.uploadStatus.set('Uploading...');
+
+    this.httpService.uploadFileRequest(file, finalCategory)
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.isLoading.set(false);
-          this.uploadStatus.set('Done!');
+          this.uploadStatus.set('Done');
           this.router.navigate(['/history']);
         },
         error: (error) => {
           this.isLoading.set(false);
           this.uploadStatus.set('Error uploading file!');
-
-          if (error.status === 401) {
-            alert("Session expired. Please log in again.");
-            this.router.navigate(['/login']);
-          }
-
           console.error(error);
         }
-      });
-
+      })
   }
 }
