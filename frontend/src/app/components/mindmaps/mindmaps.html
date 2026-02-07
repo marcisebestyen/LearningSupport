@@ -1,0 +1,34 @@
+<div class="list-layout">
+  <h2>My Mind Maps</h2>
+
+  @if (mindmapSets().length === 0) {
+    <div class="empty-state">
+      <p>No mind maps yet. Go to "History" and generate one from a document!</p>
+    </div>
+  }
+
+  <div class="grid-container">
+    @for (map of mindmapSets(); track map.id) {
+      <div class="card-item" (click)="openMap(map.id)">
+        <div class="card-header">
+          <h3>Mind Map #{{ map.id }}</h3>
+          <span class="date">{{ map.created_at | date:'shortDate' }}</span>
+        </div>
+
+        <div class="card-stats">
+          <div class="stat">
+            <span class="value">Visual</span>
+            <span class="label">Learning</span>
+          </div>
+          <div class="icon">
+            🧠
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="primary-btn">View Diagram</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -40,3 +40,12 @@ class FlashcardSetResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class MindMapResponse(BaseModel):
+    id: int
+    document_id: int
+    mermaid_script: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

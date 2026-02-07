@@ -253,3 +253,42 @@ def get_chat_history(
 ):
     service = services.ChatService(db)
     return service.get_chat_history(doc_id)
+
+
+@app.post("/documents/{doc_id}/mindmap", response_model=schemas.MindMapResponse)
+def create_mindmap(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.MindMapService(db)
+    existing = service.get_mindmap_by_doc(doc_id, current_user.id)
+    if existing:
+        return existing
+
+    mindmap = service.generate_mindmap(doc_id, current_user.id)
+    if not mindmap:
+        raise HTTPException(status_code=500, detail="Failed to generate mindmap")
+    return mindmap
+
+
+@app.get("/mindmaps", response_model=List[schemas.MindMapResponse])
+def list_mindmaps(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.MindMapService(db)
+    return service.get_user_mindmaps(current_user.id)
+
+
+@app.get("/mindmaps/{map_id}", response_model=schemas.MindMapResponse)
+def get_mindmap_by_id(
+        map_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    # You might need to add get_mindmap_by_id to your service or use a query here
+    mmap = db.query(models.MindMap).filter(models.MindMap.id == map_id).first()
+    if not mmap or mmap.document.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Mind map not found")
+    return mmap

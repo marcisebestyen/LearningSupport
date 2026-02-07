@@ -86,4 +86,18 @@ export class HttpRequestService {
   loadChatHistoryRequest(docId: number) {
     return this.http.get<any[]>(`${this.baseUrl}/documents/${docId}/chat`);
   }
+
+  // mindmap services
+
+  generateMindMapRequest(docId: number) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/mindmap`, {}, { headers: this.getHeaders() });
+  }
+
+  loadMindMapRequest() {
+    return this.http.get<any[]>(`${this.baseUrl}/mindmaps`, { headers: this.getHeaders() });
+  }
+
+  getMindMapRequest(mapId: string) {
+    return this.http.get<any>(`${this.baseUrl}/mindmaps/${mapId}`, { headers: this.getHeaders() });
+  }
 }
