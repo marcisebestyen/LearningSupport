@@ -66,6 +66,11 @@
                 @else { <span>🎴</span> Generate Flashcards }
               </button>
 
+              <button (click)="generateMindMap()" [disabled]="isGeneratingMindMap()">
+                @if (isGeneratingMindMap()) { <div class="spinner"></div> Creating... }
+                @else { <span>🧠</span> Generate Mind Map }
+              </button>
+
               <button (click)="generateQuiz()" [disabled]="isGeneratingQuiz()">
                 @if (isGeneratingQuiz()) { <div class="spinner"></div> Generating... }
                 @else { <span>✨</span> Generate Quiz }

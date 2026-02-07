@@ -1,0 +1,25 @@
+<div class="player-layout">
+
+  <div class="header">
+    <button class="exit-btn" (click)="exit()">
+      <span>✕</span>
+      <span>Close Map</span>
+    </button>
+
+    <div class="title">
+      Visual Learning Mode
+    </div>
+  </div>
+
+  <div class="scene-container">
+    @if (isLoading()) {
+      <div class="loading">Generating Visualization...</div>
+    } @else {
+
+      <div class="mermaid-container">
+        <div #mermaidDiv class="mermaid-content"></div>
+      </div>
+
+    }
+  </div>
+</div>

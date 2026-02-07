@@ -23,6 +23,8 @@ export class AppComponent {
     if (url.includes('quizzes')) return 'My Quizzes';
     if (url.includes('flashcard-player')) return 'Flashcard Session';
     if (url.includes('flashcards')) return 'My Flashcards';
+    if (url.includes('mindmap-player')) return 'Mind Map Session';
+    if (url.includes('mindmaps')) return "My Mind Maps";
     return 'Welcome';
   });
 

@@ -41,6 +41,7 @@ export class HistoryComponent implements AfterViewChecked {
   isChatLoading = signal(false);
   showChat = signal(false);
   isGeneratingCards = signal(false);
+  isGeneratingMindMap = signal(false);
 
   ngOnInit() {
     this.loadHistory();
@@ -164,6 +165,25 @@ export class HistoryComponent implements AfterViewChecked {
         },
         error: (error) => {
           console.error('Failed to start flashcards: ', error);
+        }
+      });
+  }
+
+  generateMindMap() {
+    const docId = this.selectedDocId();
+    if (!docId) return;
+
+    this.isGeneratingMindMap.set(true);
+
+    this.httpService.generateMindMapRequest(docId)
+      .pipe(finalize(() => this.isGeneratingMindMap.set(false)))
+      .subscribe({
+        next: (res) => {
+          this.router.navigate(['/mindmap-player', res.id]);
+        },
+        error: (error) => {
+          console.error('Failed to generate mind map: ', error);
+          alert('Could not generate mind map. Please try again.');
         }
       });
   }

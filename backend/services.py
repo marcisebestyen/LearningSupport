@@ -379,3 +379,94 @@ class ChatService:
         return (self.db.query(models.ChatMessage)
                 .filter(models.ChatMessage.document_id == doc_id)
                 .order_by(models.ChatMessage.created_at.asc()).all())
+
+
+class MindMapService:
+    def __init__(self, db: Session):
+        self.db = db
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
+
+
+    def generate_mindmap(self, doc_id: int, user_id: int):
+        doc = self.db.query(models.Document).filter(
+            models.Document.id == doc_id,
+            models.Document.owner_id == user_id
+        ).first()
+
+        if not doc:
+            return None
+
+        prompt = f"""
+                Create a hierarchical mind map using Mermaid.js `graph TD` syntax.
+
+                STRICT RULES:
+                1. Use `graph TD` (Top-Down) layout.
+                2. **Do NOT** use the `mindmap` keyword.
+                3. **Shapes**:
+                   - Use Double Circle for the Root Node: `A((Main Topic))`
+                   - Use Rounded Edges for Branches: `B(Sub Topic)`
+                   - Use Stadium Shape for Leaves: `C([Detail])`
+                4. **Connections**: Use standard arrows `-->`.
+                5. **Sanitization**: Remove all special characters `( ) [ ] " '` from labels.
+                6. Language: HUNGARIAN.
+
+                Text to analyze:
+                {doc.content[:30000]}
+                """
+
+        try:
+            response = self.model.generate_content(prompt)
+            script = response.text.strip()
+
+            if script.startswith("```mermaid"):
+                script = script.replace("```mermaid", "").replace("```", "")
+            elif script.startswith("```"):
+                script = script.replace("```", "")
+
+            script = script.strip()
+
+            if "graph LR" in script:
+                script = script.replace("graph LR", "graph TD")
+
+            if not script.startswith("graph"):
+                script = "graph TD\n" + script
+
+            new_map = models.MindMap(
+                document_id=doc_id,
+                mermaid_script=script
+            )
+            self.db.add(new_map)
+            self.db.commit()
+            self.db.refresh(new_map)
+
+            return new_map
+
+        except Exception as e:
+            print(f"!!! MindMap Generation Error: {e}")
+            return None
+
+
+    def get_mindmap_by_doc(self, doc_id: int, user_id: int):
+        return self.db.query(models.MindMap).join(models.Document).filter(
+            models.MindMap.document_id == doc_id,
+            models.Document.owner_id == user_id
+        ).first()
+
+
+    def get_user_mindmaps(self, user_id: int):
+        maps = self.db.query(models.MindMap).options(
+            joinedload(models.MindMap.document)
+        ).join(models.Document).filter(
+            models.Document.owner_id == user_id
+        ).order_by(models.MindMap.created_at.desc()).all()
+
+        results = []
+        for m in maps:
+            results.append({
+                "id": m.id,
+                "mermaid_script": m.mermaid_script,
+                "created_at": m.created_at,
+                "document_filename": m.document.filename if m.document.filename else "Unknown File",
+                "document_id": m.document.id,
+            })
+        return results
