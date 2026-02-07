@@ -25,6 +25,7 @@ export class AppComponent {
     if (url.includes('flashcards')) return 'My Flashcards';
     if (url.includes('mindmap-player')) return 'Mind Map Session';
     if (url.includes('mindmaps')) return "My Mind Maps";
+    if (url.includes('audios')) return "My Audios";
     return 'Welcome';
   });
 

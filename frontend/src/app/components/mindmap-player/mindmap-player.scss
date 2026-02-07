@@ -48,7 +48,7 @@
 .scene-container {
   flex: 1;
   position: relative;
-  overflow: hidden; /* We handle scroll inside mermaid-container */
+  overflow: hidden;
   background: radial-gradient(circle at center, #1e1e1e 0%, #121212 90%);
   display: flex;
   align-items: center;

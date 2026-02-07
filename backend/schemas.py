@@ -14,9 +14,16 @@ class DocumentResponse(DocumentBase):
     id: int
     upload_date: datetime
     category: str | None = None
+    has_audio: bool = False
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        data = super().from_orm(obj)
+        data.has_audio = bool(obj.google_drive_id)
+        return data
 
 class ChatRequest(BaseModel):
     question: str

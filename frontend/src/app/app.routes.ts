@@ -8,6 +8,7 @@ import { FlashcardsComponent } from './components/flashcards/flashcards';
 import { FlashcardPlayerComponent } from './components/flashcard-player/flashcard-player';
 import { MindmapsComponent } from './components/mindmaps/mindmaps';
 import { MindmapPlayerComponent } from './components/mindmap-player/mindmap-player';
+import {AudioPlayerComponent} from './components/audio-player/audio-player';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'upload', pathMatch: 'full' },
@@ -20,4 +21,5 @@ export const routes: Routes = [
   { path: 'flashcard-player/:id', component: FlashcardPlayerComponent },
   { path: 'mindmaps', component: MindmapsComponent },
   { path: 'mindmap-player/:id', component: MindmapPlayerComponent },
+  { path: 'audios', component: AudioPlayerComponent },
 ];

@@ -26,6 +26,7 @@ class Document(Base):
     summary = Column(Text, nullable=True)
     embedding = Column(Vector(768), nullable=True)
     category = Column(String, nullable=True)
+    google_drive_id = Column(String, nullable=True)
 
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="documents")
@@ -34,6 +35,7 @@ class Document(Base):
     messages = relationship("ChatMessage", back_populates="document", cascade="all, delete-orphan")
     flashcard_sets = relationship("FlashcardSet", back_populates="document", cascade="all, delete-orphan")
     mind_maps = relationship("MindMap", back_populates="document", cascade="all, delete-orphan")
+
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"

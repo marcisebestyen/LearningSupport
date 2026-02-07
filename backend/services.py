@@ -1,9 +1,16 @@
 import io
+import re
+
 import fitz
 import google.generativeai as genai
+from gtts import gTTS
 from sqlalchemy.orm import Session, joinedload
 import models
 import os
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from google.auth.transport.requests import Request
 import json
 from google.generativeai.types import GenerationConfig
 from docx import Document as DocxDocument
@@ -11,6 +18,7 @@ from pptx import Presentation
 from sqlalchemy import text as sql_text
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
 
 class DocumentService:
     def __init__(self):
@@ -34,9 +42,11 @@ class DocumentService:
         doc = fitz.open(stream=file_bytes, filetype="pdf")
         return "".join([page.get_text() for page in doc])
 
+
     def _extract_from_docx(self, file_bytes: bytes):
         cod = DocxDocument(io.BytesIO(file_bytes))
         return "\n".join([para.text for para in cod.paragraphs])
+
 
     def _extract_from_pptx(self, file_bytes: bytes):
         prs = Presentation(io.BytesIO(file_bytes))
@@ -48,6 +58,7 @@ class DocumentService:
                     text_content.append(shape.text)
 
         return "\n".join(text_content)
+
 
     def generate_summary(self, text: str) -> str:
         prompt = f"""
@@ -67,6 +78,7 @@ class DocumentService:
         except Exception as e:
             print(f"AI Error: {e}")
             return "Hiba történt az összefoglaló generálása közben."
+
 
     def save_document(self, db: Session, filename: str, content: str, summary: str, user_id: int, category: str = None):
         new_doc = models.Document(
@@ -95,8 +107,10 @@ class DocumentService:
         db.commit()
         return new_doc
 
+
     def _chunk_text(self, text: str, chunk_size: int = 1000) -> list[str]:
         return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
 
     def _get_embedding(self, text: str):
         result = genai.embed_content(
@@ -107,8 +121,10 @@ class DocumentService:
         )
         return result['embedding']
 
+
     def get_user_history(self, db: Session, user_id: int):
         return db.query(models.Document).filter(models.Document.owner_id == user_id).all()
+
 
     def delete_document(self, db: Session, doc_id: int, user_id: int):
         doc = db.query(models.Document).filter(
@@ -124,6 +140,31 @@ class DocumentService:
         return False
 
 
+    def process_audio_generation(self, db: Session, doc: models.Document):
+        try:
+            clean_text = re.sub(r'[*_#]', '', doc.summary)
+            clean_text = clean_text.replace("\n", " ")
+
+            tts = gTTS(text=clean_text, lang='hu')
+
+            temp_path = f"temp_audio_{doc.id}.mp3"
+            tts.save(temp_path)
+
+            drive_service = GoogleDriveService()
+            drive_id = drive_service.upload_audio(temp_path, f"Summary_{doc.filename}.mp3")
+
+            doc.google_drive_id = drive_id
+            db.commit()
+
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+            return drive_id
+        except Exception as e:
+            print(f"gTTS Error: {e}")
+            raise e
+
+
 class UserService:
     def create_user(self, db: Session, username: str, hashed_pass: str):
         user = models.User(username=username, hashed_password=hashed_pass)
@@ -131,6 +172,7 @@ class UserService:
         db.commit()
         db.refresh(user)
         return user
+
 
     def get_user_by_username(self, db: Session, username: str):
         return db.query(models.User).filter(models.User.username == username).first()
@@ -140,6 +182,7 @@ class QuizService:
     def __init__(self, db: Session = None):
         self.db = db
         self.model = genai.GenerativeModel('gemini-2.5-flash')
+
 
     def generate_quiz(self, document_id: int, user_id: int):
         doc: models.Document | None = self.db.query(models.Document).filter(
@@ -333,6 +376,7 @@ class ChatService:
         self.db = db
         self.model = genai.GenerativeModel('gemini-2.5-flash')
 
+
     def ask_document(self, doc_id: int, question: str):
         usr_msg = models.ChatMessage(document_id=doc_id, role='user', content=question)
         self.db.add(usr_msg)
@@ -374,6 +418,7 @@ class ChatService:
         self.db.commit()
 
         return answer_text
+
 
     def get_chat_history(self, doc_id: int):
         return (self.db.query(models.ChatMessage)
@@ -470,3 +515,45 @@ class MindMapService:
                 "document_id": m.document.id,
             })
         return results
+
+
+class GoogleDriveService:
+    def __init__(self):
+        self.client_id = os.getenv("GOOGLE_DRIVE_CLIENT_ID")
+        self.client_secret = os.getenv("GOOGLE_DRIVE_CLIENT_SECRET")
+        self.refresh_token = os.getenv("GOOGLE_DRIVE_REFRESH_TOKEN")
+        self.folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
+
+        self.creds = Credentials(
+            token=None,
+            refresh_token=self.refresh_token,
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            token_uri="https://oauth2.googleapis.com/token"
+        )
+
+        if not self.creds.valid:
+            self.creds.refresh(Request())
+
+        self.service = build('drive', 'v3', credentials=self.creds)
+
+
+    def upload_audio(self, file_path, filename):
+        file_metadata = {
+            'name': filename,
+            'parents': [self.folder_id],
+        }
+        media = MediaFileUpload(file_path, mimetype='audio/mpeg')
+
+        file = self.service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+
+        return file.get('id')
+
+
+    def stream_audio(self, file_id):
+        request = self.service.files().get_media(fileId=file_id)
+        return request.execute()
