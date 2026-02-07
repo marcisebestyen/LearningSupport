@@ -42,6 +42,7 @@ export class HistoryComponent implements AfterViewChecked {
   showChat = signal(false);
   isGeneratingCards = signal(false);
   isGeneratingMindMap = signal(false);
+  isGeneratingAudio = signal(false);
 
   ngOnInit() {
     this.loadHistory();
@@ -184,6 +185,35 @@ export class HistoryComponent implements AfterViewChecked {
         error: (error) => {
           console.error('Failed to generate mind map: ', error);
           alert('Could not generate mind map. Please try again.');
+        }
+      });
+  }
+
+  generateAudio() {
+    const docId = this.selectedDocId();
+    if (!docId) return;
+
+    this.isGeneratingAudio.set(true);
+
+    this.httpService.generateDocumentAudioRequest(docId)
+      .pipe(
+        finalize(() => {
+          this.isGeneratingAudio.set(false);
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          console.log("Audio generations response: ", res);
+
+          this.history.update(list => list.map(doc =>
+            doc.id === docId ? { ...doc, google_drive_id: res.drive_id, has_audio: true } : doc
+          ));
+
+          this.router.navigate(['/audios']);
+        },
+        error: (error) => {
+          console.error('Failed to generate audio audio response: ', error);
+          alert('Could not generate audio audio audio response. Make sure the document has summary.');
         }
       });
   }

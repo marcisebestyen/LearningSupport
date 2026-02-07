@@ -61,6 +61,11 @@
             </div>
 
             <div class="action-bar">
+              <button (click)="generateAudio()" [disabled]="isGeneratingAudio()">
+                @if (isGeneratingAudio()) { <div class="spinner"></div> Creating... }
+                @else { <span>🔉</span> Generate Audio }
+              </button>
+
               <button (click)="startFlashcards()" [disabled]="isGeneratingCards()">
                 @if (isGeneratingCards()) { <div class="spinner"></div> Creating... }
                 @else { <span>🎴</span> Generate Flashcards }

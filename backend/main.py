@@ -1,8 +1,9 @@
 import os
 import fitz
 import google.generativeai as genai
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from dotenv import load_dotenv
@@ -14,7 +15,6 @@ from database import engine
 import models
 from typing import List
 from pydantic import BaseModel
-from fastapi import Form
 
 load_dotenv()
 
@@ -291,3 +291,75 @@ def get_chat_history(
 ):
     service = services.ChatService(db)
     return service.get_chat_history(doc_id)
+
+
+# --- Audio Endpoints ---
+
+@app.post("/documents/{doc_id}/generate-audio")
+def generate_document_audio(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    doc = db.query(models.Document).filter(
+        models.Document.id == doc_id,
+        models.Document.owner_id == current_user.id
+    ).first()
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if not doc.summary:
+        raise HTTPException(status_code=400, detail="Document has no summary to read")
+
+    try:
+        drive_id = doc_service.process_audio_generation(db, doc)
+        return {"message": "Audio generated successfully", "drive_id": drive_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+@app.get("/audios/{doc_id}/play")
+async def play_audio(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    doc = db.query(models.Document).filter(
+        models.Document.id == doc_id,
+        models.Document.owner_id == current_user.id
+    ).first()
+
+    if not doc or not doc.google_drive_id:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
+    drive_service = services.GoogleDriveService()
+    audio_bytes = drive_service.stream_audio(doc.google_drive_id)
+
+    return Response(
+        content=audio_bytes,
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": f"inline; filename=summary_{doc_id}.mp3",
+            "Accept-Ranges": "bytes"
+        }
+    )
+
+
+@app.get("/audios")
+def get_audios(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    audios = db.query(models.Document).filter(
+        models.Document.owner_id == current_user.id,
+        models.Document.google_drive_id != None
+    ).all()
+
+    return [
+        {
+            "id": a.id,
+            "filename": a.filename,
+            "category": a.category,
+            "audio_url": f"/audios/{a.id}/play"
+        } for a in audios
+    ]

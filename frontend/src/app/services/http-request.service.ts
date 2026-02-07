@@ -103,4 +103,21 @@ export class HttpRequestService {
   loadChatHistoryRequest(docId: number) {
     return this.http.get<any[]>(`${this.baseUrl}/documents/${docId}/chat`, { headers: this.getHeaders() });
   }
+
+  // audio services
+
+  generateDocumentAudioRequest(docId: number) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/generate-audio`, {}, { headers: this.getHeaders() });
+  }
+
+  loadAudiosRequest() {
+    return this.http.get<any[]>(`${this.baseUrl}/audios`, { headers: this.getHeaders() });
+  }
+
+  playAudioRequest(docId: number) {
+    return this.http.get(`${this.baseUrl}/audios/${docId}/play`, {
+      headers: this.getHeaders(),
+      responseType: 'blob'
+    });
+  }
 }
