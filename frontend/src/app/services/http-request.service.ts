@@ -9,6 +9,13 @@ export class HttpRequestService {
 
   constructor(private http: HttpClient) { }
 
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+    })
+  }
+
   // auth services
 
   registerRequest(username: string, password: string) {
@@ -19,12 +26,6 @@ export class HttpRequestService {
     return this.http.post<any>(`${this.baseUrl}/login?username=${username}&password=${password}`, {});
   }
 
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-    })
-  }
 
   // document services
 
@@ -40,64 +41,66 @@ export class HttpRequestService {
   }
 
   loadHistoryRequest() {
-    return this.http.get<any>(`${this.baseUrl}/history`);
+    return this.http.get<any>(`${this.baseUrl}/documents`, { headers: this.getHeaders() });
   }
 
   deleteDocRequest(item: any) {
-    return this.http.delete(`http://127.0.0.1:8000/delete/${item.id}`);
+    return this.http.delete(`${this.baseUrl}/documents/${item.id}`, { headers: this.getHeaders() });
   }
 
   // quiz services
 
   generateQuizRequest(docId: number){
-    return this.http.post<any>(`http://127.0.0.1:8000/documents/${docId}/quiz`, {});
-  }
-
-  loadQuizRequest(id: string) {
-    return this.http.get(`http://127.0.0.1:8000/quizzes/${id}`);
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/quizzes`, {}, { headers: this.getHeaders() });
   }
 
   loadQuizzesRequest(){
-    return this.http.get<any[]>(`${this.baseUrl}/quizzes`);
+    return this.http.get<any[]>(`${this.baseUrl}/quizzes`, { headers: this.getHeaders() });
+  }
+
+  loadQuizRequest(quizId: string) {
+    return this.http.get(`${this.baseUrl}/quizzes/${quizId}`, { headers: this.getHeaders() });
   }
 
   submitQuizRequest(quizId: string, score: number) {
-    return this.http.post(`http://127.0.0.1:8000/quizzes/${quizId}/submit`, { score: score });
+    return this.http.post(`${this.baseUrl}/quizzes/${quizId}/submit`, { score: score }, { headers: this.getHeaders() });
   }
+
+  // flashcard services
 
   generateFlashcardRequest(docId: number) {
-    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/flashcards`, {});
-  }
-
-  getFlashcardSetRequest(setId: string) {
-    return this.http.get<any[]>(`${this.baseUrl}/flashcards/${setId}`);
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/flashcards`, {}, { headers: this.getHeaders() });
   }
 
   loadFlashcardsRequest() {
-    return this.http.get<any[]>(`${this.baseUrl}/flashcards-list`);
+    return this.http.get<any[]>(`${this.baseUrl}/flashcards`, { headers: this.getHeaders() });
   }
 
-  // chat services
-
-  chatWithDocRequest(docId: number, question: string) {
-    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/chat`, { question });
-  }
-
-  loadChatHistoryRequest(docId: number) {
-    return this.http.get<any[]>(`${this.baseUrl}/documents/${docId}/chat`);
+  getFlashcardSetRequest(setId: string) {
+    return this.http.get<any[]>(`${this.baseUrl}/flashcards/${setId}`, { headers: this.getHeaders() });
   }
 
   // mindmap services
 
   generateMindMapRequest(docId: number) {
-    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/mindmap`, {}, { headers: this.getHeaders() });
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/mindmaps`, {}, { headers: this.getHeaders() });
   }
 
-  loadMindMapRequest() {
+  loadMindMapsRequest() {
     return this.http.get<any[]>(`${this.baseUrl}/mindmaps`, { headers: this.getHeaders() });
   }
 
   getMindMapRequest(mapId: string) {
     return this.http.get<any>(`${this.baseUrl}/mindmaps/${mapId}`, { headers: this.getHeaders() });
+  }
+
+  // chat services
+
+  chatWithDocRequest(docId: number, question: string) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/chat`, { question }, { headers: this.getHeaders() });
+  }
+
+  loadChatHistoryRequest(docId: number) {
+    return this.http.get<any[]>(`${this.baseUrl}/documents/${docId}/chat`, { headers: this.getHeaders() });
   }
 }

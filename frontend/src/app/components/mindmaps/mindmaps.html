@@ -11,7 +11,7 @@
     @for (map of mindmapSets(); track map.id) {
       <div class="card-item" (click)="openMap(map.id)">
         <div class="card-header">
-          <h3>Mind Map #{{ map.id }}</h3>
+          <h3>Mind Map #{{ map.document_filename }}</h3>
           <span class="date">{{ map.created_at | date:'shortDate' }}</span>
         </div>
 

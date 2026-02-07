@@ -407,18 +407,8 @@ class MindMapService:
                    - Use Rounded Edges for Branches: `B(Sub Topic)`
                    - Use Stadium Shape for Leaves: `C([Detail])`
                 4. **Connections**: Use standard arrows `-->`.
-                5. **Sanitization**: 
-                   - Remove ALL special characters from labels: `( ) [ ] {{ }} " '`.
-                   - Keep labels short (1-4 words).
+                5. **Sanitization**: Remove all special characters `( ) [ ] " '` from labels.
                 6. Language: HUNGARIAN.
-
-                EXAMPLE OUTPUT:
-                graph TD
-                  Root((Biológia)) --> A(Sejtek)
-                  Root --> B(Genetika)
-                  A --> A1([Mitózis])
-                  A --> A2([Meiózis])
-                  B --> B1([DNS])
 
                 Text to analyze:
                 {doc.content[:30000]}
@@ -434,6 +424,9 @@ class MindMapService:
                 script = script.replace("```", "")
 
             script = script.strip()
+
+            if "graph LR" in script:
+                script = script.replace("graph LR", "graph TD")
 
             if not script.startswith("graph"):
                 script = "graph TD\n" + script
@@ -461,6 +454,19 @@ class MindMapService:
 
 
     def get_user_mindmaps(self, user_id: int):
-        return self.db.query(models.MindMap).join(models.Document).filter(
+        maps = self.db.query(models.MindMap).options(
+            joinedload(models.MindMap.document)
+        ).join(models.Document).filter(
             models.Document.owner_id == user_id
         ).order_by(models.MindMap.created_at.desc()).all()
+
+        results = []
+        for m in maps:
+            results.append({
+                "id": m.id,
+                "mermaid_script": m.mermaid_script,
+                "created_at": m.created_at,
+                "document_filename": m.document.filename if m.document.filename else "Unknown File",
+                "document_id": m.document.id,
+            })
+        return results

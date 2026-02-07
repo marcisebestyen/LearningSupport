@@ -46,6 +46,7 @@ class MindMapResponse(BaseModel):
     document_id: int
     mermaid_script: str
     created_at: datetime
+    document_filename: str
 
     class Config:
         from_attributes = True

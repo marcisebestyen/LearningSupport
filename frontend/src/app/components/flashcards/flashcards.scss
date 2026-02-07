@@ -90,12 +90,13 @@
       cursor: pointer;
       font-weight: 600;
       transition: all 0.2s;
-    }
-  }
 
-  &:hover .card-actions button {
-    background: #667eea;
-    border-color: #667eea;
-    color: white;
+      &:hover {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+    }
   }
 }

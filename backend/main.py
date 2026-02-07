@@ -59,6 +59,7 @@ def extract_text_from_pdf(file_bytes):
 class ScoreSubmission(BaseModel):
     score: int
 
+# --- Auth Endpoints ---
 
 @app.post("/register")
 def register(username: str, password: str, db: Session = Depends(database.get_db)):
@@ -68,16 +69,16 @@ def register(username: str, password: str, db: Session = Depends(database.get_db
     user_service.create_user(db, username, hashed)
     return {"message": "User created"}
 
-
 @app.post("/login")
 def login(username: str, password: str, db: Session = Depends(database.get_db)):
     user = user_service.get_user_by_username(db, username)
     if not user or not auth.verify_password(password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
-
     token = auth.create_access_token(data={"sub": user.username})
     return {"access_token": token, "token_type": "bearer"}
 
+
+# --- Document Endpoints ---
 
 ALLOWED_MIME_TYPES = [
     "application/pdf",
@@ -85,7 +86,7 @@ ALLOWED_MIME_TYPES = [
     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
 ]
 
-@app.post("/upload/")
+@app.post("/upload")
 async def upload_file(
         file: UploadFile = File(...),
         category: str = Form(None),
@@ -112,14 +113,14 @@ async def upload_file(
     return doc
 
 
-@app.get("/history", response_model=List[schemas.DocumentResponse])
+@app.get("/documents", response_model=List[schemas.DocumentResponse])
 def read_history(
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
 ):
     return doc_service.get_user_history(db, current_user.id)
 
-@app.delete("/delete/{doc_id}")
+@app.delete("/documents/{doc_id}")
 def delete_document(
         doc_id: int,
         db: Session = Depends(database.get_db),
@@ -131,8 +132,9 @@ def delete_document(
 
     return {"message": "Document deleted successfully."}
 
+# --- Quiz Endpoints ---
 
-@app.post("/documents/{doc_id}/quiz")
+@app.post("/documents/{doc_id}/quizzes")
 def create_quiz(
         doc_id: int,
         db: Session = Depends(database.get_db),
@@ -151,8 +153,7 @@ def list_quizzes(
         current_user: models.User = Depends(auth.get_current_user)
 ):
     quiz_service = services.QuizService(db)
-    quizzes = quiz_service.get_user_quizzes(current_user.id)
-    return quizzes
+    return quiz_service.get_user_quizzes(current_user.id)
 
 
 @app.get("/quizzes/{quiz_id}")
@@ -161,33 +162,10 @@ def get_quiz(
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
 ):
-    print(f"\n--- DEBUGGING QUIZ {quiz_id} ---")
-    print(f"Requesting User: {current_user.username} (ID: {current_user.id})")
-
-    quiz_any_owner = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
-
-    if not quiz_any_owner:
-        print("❌ RESULT: Quiz ID does not exist in the database.")
-        raise HTTPException(status_code=404, detail="Quiz ID not found in DB")
-
-    print(f"✅ Quiz found! It belongs to Owner ID: {quiz_any_owner.owner_id}")
-
-    if quiz_any_owner.owner_id != current_user.id:
-        print(f"❌ OWNERSHIP MISMATCH! User {current_user.id} tried to access Quiz owned by {quiz_any_owner.owner_id}")
-        raise HTTPException(status_code=404, detail="Quiz not found (Ownership mismatch)")
-
-    try:
-        service_result = services.QuizService(db).get_quiz_by_id(quiz_id, current_user.id)
-        if not service_result:
-            print("❌ Service returned None (This implies the service query logic is broken)")
-        else:
-            print(f"✅ Service loaded quiz with {len(service_result.questions)} questions.")
-            return service_result
-    except Exception as e:
-        print(f"❌ CRASH during service call: {e}")
-        raise e
-
-    raise HTTPException(status_code=404, detail="Unknown error in retrieval")
+    service_result = services.QuizService(db).get_quiz_by_id(quiz_id, current_user.id)
+    if not service_result:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    return service_result
 
 
 @app.post("/quizzes/{quiz_id}/submit")
@@ -203,6 +181,8 @@ def submit_quiz_score(
         raise HTTPException(status_code=404, detail="Quiz not found")
     return result
 
+# --- Flashcard Endpoints ---
+
 @app.post("/documents/{doc_id}/flashcards")
 def create_flashcards(
         doc_id: int,
@@ -215,6 +195,14 @@ def create_flashcards(
         raise HTTPException(status_code=500, detail="Failed to generate flashcards")
     return {"set_id": set_id}
 
+@app.get("/flashcards", response_model=List[schemas.FlashcardSetResponse])
+def list_flashcards(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.QuizService(db)
+    return service.get_user_flashcard_sets(current_user.id)
+
 @app.get("/flashcards/{set_id}", response_model=List[schemas.Flashcard])
 def get_flashcard(
         set_id: int,
@@ -226,13 +214,63 @@ def get_flashcard(
         raise HTTPException(status_code=404, detail="Failed to get flashcards")
     return flash_set.cards
 
-@app.get("/flashcards-list", response_model=List[schemas.FlashcardSetResponse])
-def list_flashcards(
+# --- Mind Map Endpoints ---
+
+@app.post("/documents/{doc_id}/mindmaps", response_model=schemas.MindMapResponse)
+def create_mindmap(
+        doc_id: int,
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
 ):
-    service = services.QuizService(db)
-    return service.get_user_flashcard_sets(current_user.id)
+    service = services.MindMapService(db)
+    existing = service.get_mindmap_by_doc(doc_id, current_user.id)
+    if existing:
+        return {
+            "id": existing.id,
+            "mermaid_script": existing.mermaid_script,
+            "created_at": existing.created_at,
+            "document_filename": existing.document.filename,  # <--- FIX HERE (.document.filename)
+            "document_id": existing.document_id
+        }
+
+    mindmap = service.generate_mindmap(doc_id, current_user.id)
+    if not mindmap:
+        raise HTTPException(status_code=500, detail="Failed to generate mindmap")
+    return {
+        "id": mindmap.id,
+        "mermaid_script": mindmap.mermaid_script,
+        "created_at": mindmap.created_at,
+        "document_filename": mindmap.document.filename,
+        "document_id": mindmap.document_id,
+    }
+
+@app.get("/mindmaps", response_model=List[schemas.MindMapResponse])
+def list_mindmaps(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.MindMapService(db)
+    return service.get_user_mindmaps(current_user.id)
+
+@app.get("/mindmaps/{map_id}", response_model=schemas.MindMapResponse)
+def get_mindmap_by_id(
+        map_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    mmap = db.query(models.MindMap).filter(models.MindMap.id == map_id).first()
+    if not mmap or mmap.document.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Mind map not found")
+
+    return {
+        "id": mmap.id,
+        "mermaid_script": mmap.mermaid_script,
+        "created_at": mmap.created_at,
+        "document_filename": mmap.document.filename,
+        "document_id": mmap.document.id,
+    }
+
+# --- Chat Endpoints ---
 
 @app.post("/documents/{doc_id}/chat")
 def chat_with_document(
@@ -253,42 +291,3 @@ def get_chat_history(
 ):
     service = services.ChatService(db)
     return service.get_chat_history(doc_id)
-
-
-@app.post("/documents/{doc_id}/mindmap", response_model=schemas.MindMapResponse)
-def create_mindmap(
-        doc_id: int,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(auth.get_current_user)
-):
-    service = services.MindMapService(db)
-    existing = service.get_mindmap_by_doc(doc_id, current_user.id)
-    if existing:
-        return existing
-
-    mindmap = service.generate_mindmap(doc_id, current_user.id)
-    if not mindmap:
-        raise HTTPException(status_code=500, detail="Failed to generate mindmap")
-    return mindmap
-
-
-@app.get("/mindmaps", response_model=List[schemas.MindMapResponse])
-def list_mindmaps(
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(auth.get_current_user)
-):
-    service = services.MindMapService(db)
-    return service.get_user_mindmaps(current_user.id)
-
-
-@app.get("/mindmaps/{map_id}", response_model=schemas.MindMapResponse)
-def get_mindmap_by_id(
-        map_id: int,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(auth.get_current_user)
-):
-    # You might need to add get_mindmap_by_id to your service or use a query here
-    mmap = db.query(models.MindMap).filter(models.MindMap.id == map_id).first()
-    if not mmap or mmap.document.owner_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Mind map not found")
-    return mmap

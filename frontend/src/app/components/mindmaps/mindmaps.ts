@@ -20,7 +20,7 @@ export class MindmapsComponent implements OnInit {
   }
 
   loadMindmaps() {
-    this.httpService.loadMindMapRequest()
+    this.httpService.loadMindMapsRequest()
       .subscribe({
         next: (data) => {
           this.mindmapSets.set(data);
