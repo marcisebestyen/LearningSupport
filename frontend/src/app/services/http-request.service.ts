@@ -29,13 +29,15 @@ export class HttpRequestService {
 
   // document services
 
-  uploadFileRequest(file: File, category: string = '') {
+  uploadFileRequest(file: File, category: string = '', force: boolean = false) {
     const formData = new FormData();
     formData.append('file', file);
 
     if (category && category.trim() !== '') {
       formData.append('category', category);
     }
+
+    formData.append('force_upload', String(force));
 
     return this.http.post<any>(`${this.baseUrl}/upload/`, formData, { headers: this.getHeaders() });
   }
