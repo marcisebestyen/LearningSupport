@@ -47,14 +47,30 @@
         </div>
 
         <div class="view-toggle">
-          <button [class.active]="!showChat()" (click)="showChat.set(false)">📄 Summary</button>
-          <button [class.active]="showChat()" (click)="showChat.set(true)">💬 AI Tutor</button>
+          <button
+            [class.active]="activeTab() === 'summary'"
+            (click)="switchTab('summary')">
+            📄 Summary
+          </button>
+
+          <button
+            [class.active]="activeTab() === 'chat'"
+            (click)="switchTab('chat')">
+            💬 AI Chat
+          </button>
+
+          <button
+            [class.active]="activeTab() === 'tutor'"
+            (click)="switchTab('tutor')"
+            class="tutor-btn">
+            🎓 Socratic Tutor
+          </button>
         </div>
       </div>
 
       <div class="content-body">
 
-        @if (!showChat()) {
+        @if (activeTab() === 'summary') {
           <div class="summary-container fade-in">
             <div class="markdown-body">
               <markdown [data]="selectedSummary()"></markdown>
@@ -84,19 +100,32 @@
           </div>
         }
 
-        @if (showChat()) {
+        @if (activeTab() === 'chat' || activeTab() === 'tutor') {
           <div class="chat-wrapper fade-in">
+
+            @if (activeTab() === 'tutor') {
+              <div class="tutor-banner">
+                <span>🎓 <b>Socratic Mode:</b> I will ask the questions. You give the answers!</span>
+              </div>
+            }
+
             <div class="chat-messages" #scrollContainer>
-              @if(chatMessages().length === 0) {
+              @if(chatMessages().length === 0 && !isChatLoading()) {
                 <div class="chat-empty">
-                  <p>Ask a question about this document to get started!</p>
+                  @if(activeTab() === 'tutor') {
+                    <p>Starting session...</p>
+                  } @else {
+                    <p>Ask a question about this document to get started!</p>
+                  }
                 </div>
               }
 
               @for (msg of chatMessages(); track $index) {
                 <div class="msg-row" [class.user]="msg.role === 'user'">
                   <div class="msg-bubble">
-                    <div class="sender">{{ msg.role === 'user' ? 'You' : 'AI Assistant' }}</div>
+                    <div class="sender">
+                      {{ msg.role === 'user' ? 'You' : (activeTab() === 'tutor' ? 'Socratic Tutor' : 'AI Assistant') }}
+                    </div>
                     <markdown [data]="msg.text"></markdown>
                   </div>
                 </div>
@@ -116,7 +145,7 @@
                 <input
                   [(ngModel)]="chatInput"
                   (keyup.enter)="sendMessage()"
-                  placeholder="Type your question here..."
+                  [placeholder]="activeTab() === 'tutor' ? 'Type your answer here...' : 'Ask a question...'"
                   [disabled]="isChatLoading()"
                 >
                 <button (click)="sendMessage()" [disabled]="!chatInput() || isChatLoading()">
