@@ -114,6 +114,10 @@ export class HttpRequestService {
     return this.http.post<any>(`${this.baseUrl}/documents/${docId}/tutor/reply`, { question: answer }, { headers: this.getHeaders() });
   }
 
+  resetTutorSessionRequest(docId: number) {
+    return this.http.delete(`${this.baseUrl}/documents/${docId}/tutor/reset`, { headers: this.getHeaders() });
+  }
+
   // audio services
 
   generateDocumentAudioRequest(docId: number) {

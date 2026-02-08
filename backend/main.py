@@ -347,8 +347,26 @@ def reply_tutor(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    response = service.handle_tutor_response(doc_id, chat_req.question)
-    return {"answer": response}
+    response_dict = service.handle_tutor_response(doc_id, chat_req.question)
+    return response_dict
+
+
+@app.delete("/documents/{doc_id}/tutor/reset")
+def reset_tutor(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.ChatService(db)
+    doc = db.query(models.Document).filter(
+        models.Document.id == doc_id,
+        models.Document.owner_id == current_user.id
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    service.reset_tutor_history(doc_id)
+    return {"message": "Tutor session reset successfully"}
 
 # --- Audio Endpoints ---
 
