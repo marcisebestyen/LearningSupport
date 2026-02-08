@@ -36,7 +36,7 @@ export class HistoryComponent implements AfterViewChecked {
 
     return list.filter(doc => doc.category === filter);
   });
-  chatMessages = signal<{role: string, text: string}[]>([]);
+  chatMessages = signal<{role: string, text: string, status?: string}[]>([]);
   chatInput = signal('');
   isChatLoading = signal(false);
   showChat = signal(false);
@@ -45,6 +45,8 @@ export class HistoryComponent implements AfterViewChecked {
   isGeneratingAudio = signal(false);
   isTutorMode = signal(false);
   activeTab = signal<'summary' | 'chat' | 'tutor'>('summary');
+  isTyping = signal(false);
+  sessionFinished = signal(false);
 
   ngOnInit() {
     this.loadHistory();
@@ -222,13 +224,13 @@ export class HistoryComponent implements AfterViewChecked {
 
   sendMessage() {
     const text = this.chatInput();
-    if (!text.trim() || !this.selectedDocId()) {
+    if (!text.trim() || !this.selectedDocId() || this.isTyping()) {
       return;
     }
 
     const currentTab = this.activeTab();
 
-    this.chatMessages.update(msgs => [...msgs, { role: 'user', text }]);
+    this.chatMessages.update(msgs => [...msgs, { role: 'user', text, status: 'neutral' }]);
     this.chatInput.set('');
     this.isChatLoading.set(true);
 
@@ -238,45 +240,24 @@ export class HistoryComponent implements AfterViewChecked {
       this.httpService.replyToTutorRequest(docId!, text)
         .pipe(finalize(() => this.isChatLoading.set(false)))
         .subscribe({
-          next: (res) => this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]),
+          next: (res) => {
+            if (res.is_finish) {
+              this.sessionFinished.set(true);
+            }
+
+            this.typeWriterEffect(res.text, res.status);
+          },
           error: () => this.isChatLoading.set(false)
         });
     } else {
       this.httpService.chatWithDocRequest(docId!, text)
         .pipe(finalize(() => this.isChatLoading.set(false)))
         .subscribe({
-          next: (res) => this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]),
+          next: (res) => {
+            this.typeWriterEffect(res.answer(), 'neutral');
+          },
           error: () => this.isChatLoading.set(false)
         });
-    }
-  }
-
-  toggleTutorMode() {
-    if (!this.isTutorMode()) {
-      const docId = this.selectedDocId();
-      if (!docId) return;
-
-      this.isTutorMode.set(true);
-      this.chatMessages.set([]);
-      this.isChatLoading.set(true);
-      this.showChat.set(true);
-
-      this.httpService.startTutorSessionRequest(docId)
-        .pipe(
-          finalize(() => this.isTutorMode.set(false))
-        )
-        .subscribe({
-          next: (res) => {
-            this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.message }]);
-          },
-          error: (error) => {
-            console.error('Failed to update chat: ', error);
-          }
-        });
-    } else {
-      this.isTutorMode.set(false);
-
-      if (this.selectedDocId()) { this.loadChatHistory(this.selectedDocId()!); }
     }
   }
 
@@ -306,11 +287,25 @@ export class HistoryComponent implements AfterViewChecked {
   }
 
   mapMessages(msgs: any[]) {
-    const formatted = msgs.map(m => ({
-      role: (m.role === 'user' || m.role === 'tutor_user') ? 'user' : 'ai',
-      text: m.content
-    }));
+    let finishedFound = false;
+    const formatted = msgs.map(m => {
+      const parsed = this.parseMessage(m.content);
+
+      if (parsed.is_finish) {
+        finishedFound = true;
+      }
+
+      return {
+        role: (m.role === 'user' || m.role === 'tutor_user') ? 'user' : 'ai',
+        text: parsed.text,
+        status: parsed.status || 'neutral',
+      };
+    });
     this.chatMessages.set(formatted);
+
+    if (this.activeTab() === 'tutor') {
+      this.sessionFinished.set(finishedFound);
+    }
   }
 
   startTutor() {
@@ -320,5 +315,72 @@ export class HistoryComponent implements AfterViewChecked {
       .subscribe(res => {
         this.chatMessages.update(m => [...m, {role: 'ai', text: res.message || res}]);
       });
+  }
+
+  restartTutor() {
+    const docId = this.selectedDocId();
+    if (!docId) return;
+
+    if (!confirm('Are you sure you want to reset this session?')) {
+      return;
+    }
+
+    this.isChatLoading.set(true);
+
+    this.httpService.resetTutorSessionRequest(docId!)
+      .pipe(finalize(() => {
+
+      }))
+      .subscribe({
+        next: () => {
+          this.chatMessages.set([]);
+          this.sessionFinished.set(false);
+          this.isTyping.set(false);
+
+          this.startTutor();
+        },
+        error: (error) => {
+          console.error("Error resetting tutor.", error);
+          this.sessionFinished.set(false);
+        }
+      });
+  }
+
+  parseMessage(content: string): { text: string, status: string, is_finish?: boolean } {
+    try {
+      const data = JSON.parse(content);
+      if (data.text && data.status) {
+        return data;
+      }
+      return { text: content, status: 'neutral', is_finish: false };
+    } catch (error) {
+      return { text: content, status: 'neutral', is_finish: false };
+    }
+  }
+
+  typeWriterEffect(fullText: string, status: string) {
+    this.isTyping.set(true);
+    let currentText = '';
+    const speed = 15;
+
+    this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: '', status: status }]);
+    const msgIndex = this.chatMessages().length - 1;
+
+    let i = 0;
+    const interval = setInterval(() => {
+      currentText += fullText.charAt(i);
+
+      this.chatMessages.update(msgs => {
+        const newMsgs = [...msgs];
+        newMsgs[msgIndex] = { ...newMsgs[msgIndex], text: currentText };
+        return newMsgs;
+      });
+
+      i++;
+      if (i >= fullText.length) {
+        clearInterval(interval);
+        this.isTyping.set(false);
+      }
+    }, speed);
   }
 }

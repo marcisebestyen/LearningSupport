@@ -152,6 +152,7 @@
   justify-content: space-between;
   align-items: center;
   background: #1e1e1e;
+  z-index: 10;
 
   h2 {
     margin: 0;
@@ -222,6 +223,7 @@
   padding: 2rem 10%;
   overflow-y: auto;
   height: 100%;
+  box-sizing: border-box;
 
   ::ng-deep .markdown-body {
     color: #d4d4d4;
@@ -289,6 +291,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .tutor-banner {
@@ -299,6 +302,7 @@
   font-size: 0.9rem;
   border-bottom: 1px solid #34495e;
   animation: fadeIn 0.5s;
+  flex-shrink: 0;
 }
 
 .chat-messages {
@@ -308,6 +312,9 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
   .chat-empty {
     text-align: center;
@@ -327,9 +334,27 @@
     max-width: 75%;
     padding: 14px 20px;
     border-radius: 12px;
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
     line-height: 1.6;
     font-size: 0.95rem;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+    &.status-correct {
+      border-color: #2ecc71 !important;
+      background: rgba(46, 204, 113, 0.1) !important;
+    }
+
+    &.status-incorrect {
+      border-color: #e74c3c !important;
+      background: rgba(231, 76, 60, 0.1) !important;
+    }
+
+    &.status-finish {
+      border-color: #f1c40f !important;
+      background: linear-gradient(135deg, rgba(241, 196, 15, 0.1) 0%, rgba(243, 156, 18, 0.1) 100%) !important;
+      font-size: 1.1rem;
+    }
 
     .sender {
       font-size: 0.7rem;
@@ -355,10 +380,27 @@
   }
 }
 
+.msg-bubble markdown p:last-child::after {
+  content: "▋";
+  display: inline-block;
+  vertical-align: bottom;
+  background-color: transparent;
+  width: 8px;
+  animation: blink 1s step-end infinite;
+  opacity: 0;
+}
+
+.is-typing .msg-bubble markdown p:last-child::after {
+  opacity: 1;
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
 .chat-input-area {
   padding: 1.5rem 10%;
   background-color: #1e1e1e;
   border-top: 1px solid #333;
+  flex-shrink: 0;
 
   .input-box {
     display: flex;
@@ -379,6 +421,11 @@
       font-size: 1rem;
 
       &::placeholder { color: #666; }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
 
     button {
@@ -394,9 +441,22 @@
       &:hover:not(:disabled) { background: #667eea; }
       &:disabled { opacity: 0.5; cursor: not-allowed; }
     }
+
+    .restart-btn {
+      background: #e67e22 !important;
+      color: white !important;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 1 !important;
+      cursor: pointer !important;
+
+      &:hover {
+        background: #d35400 !important;
+      }
+    }
   }
 }
-
 .placeholder-state {
   display: flex;
   flex-direction: column;

@@ -122,7 +122,9 @@
 
               @for (msg of chatMessages(); track $index) {
                 <div class="msg-row" [class.user]="msg.role === 'user'">
-                  <div class="msg-bubble">
+                  <div class="msg-bubble"
+                  [class.status-correct]="msg.status === 'correct'"
+                  [class.status-incorrect]="msg.status === 'incorrect'">
                     <div class="sender">
                       {{ msg.role === 'user' ? 'You' : (activeTab() === 'tutor' ? 'Socratic Tutor' : 'AI Assistant') }}
                     </div>
@@ -144,16 +146,23 @@
               <div class="input-box">
                 <input
                   [(ngModel)]="chatInput"
-                  (keyup.enter)="sendMessage()"
-                  [placeholder]="activeTab() === 'tutor' ? 'Type your answer here...' : 'Ask a question...'"
-                  [disabled]="isChatLoading()"
+                  (keyup.enter)="!sessionFinished() && sendMessage()"
+                  [placeholder]="sessionFinished() ? 'Session Finished. Refresh to start over.' : (activeTab() === 'tutor' ? 'Type your answer here...' : 'Ask a question...')"
+                  [disabled]="isChatLoading() || sessionFinished()"
                 >
-                <button (click)="sendMessage()" [disabled]="!chatInput() || isChatLoading()">
-                  Send
-                </button>
+
+                @if (sessionFinished()) {
+                  <button class="restart-btn" (click)="restartTutor()">
+                    🔄 Restart
+                  </button>
+                } @else {
+                  <button (click)="sendMessage()" [disabled]="!chatInput() || isChatLoading()">
+                    Send
+                  </button>
+                }
               </div>
             </div>
-          </div>
+            </div>
         }
       </div>
     }

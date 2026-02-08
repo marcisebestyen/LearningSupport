@@ -517,6 +517,7 @@ class ChatService:
         self.db.commit()
 
         history = self.get_chat_history(doc_id, mode='tutor')
+        is_final_turn = len(history) >= 10
 
         doc = self.db.query(models.Document).filter(
             models.Document.id == doc_id,
@@ -524,34 +525,65 @@ class ChatService:
         context_text = doc.content[:30000]
 
         conversation_history = "\n".join(
-            [f"{'AI' if 'ai' in msg.role else 'Student'}: {msg.content}" for msg in history[-6:]])
+            [f"{'AI' if 'ai' in msg.role else 'Student'}: {msg.content}" for msg in history[-10:]])
 
-        prompt = f"""
-                You are a Socratic Tutor teaching the text below.
+        if is_final_turn:
+            prompt = f"""
+                        The tutoring session is over. Generate a Final Report based on the student's performance.
 
-                Context Text:
-                {context_text}
+                        Context: {context_text}
+                        History: {conversation_history}
 
-                Current Conversation History:
-                {conversation_history}
+                        Output strictly JSON:
+                        {{
+                            "text": "## 📊 Session Report Card\\n\\n**Grade:** 8/10\\n\\n**Feedback:** ...",
+                            "status": "neutral",
+                            "is_finish": true
+                        }}
+                        Language: HUNGARIAN.
+                        """
+        else:
+            prompt = f"""
+                        You are a Socratic Tutor. Analyze the user's answer.
 
-                Your Task:
-                1. Analyze the USER's last answer.
-                2. If the answer is WRONG: Gently correct them and explain why based on the text. Then ask a simpler follow-up question.
-                3. If the answer is CORRECT: Praise them briefly, then ask a DEEPER, more complex follow-up question to test their logic.
-                4. If the answer is PARTIAL: Acknowledge the correct part, point out the missing part, and ask them to clarify.
-                5. Keep your response concise (max 3-4 sentences).
-                6. Language: HUNGARIAN.
-                """
+                        Context: {context_text}
+                        History: {conversation_history}
+                        User Answer: {user_answer}
 
-        response = self.model.generate_content(prompt)
-        next_ai_message = response.text
+                        Output strictly JSON:
+                        {{
+                            "status": "correct" OR "incorrect" OR "neutral",
+                            "text": "Your feedback here... + Next Question",
+                            "is_finish": false
+                        }}
+                        Language: HUNGARIAN.
+                        """
 
-        ai_msg = models.ChatMessage(document_id=doc_id, role='tutor_ai', content=next_ai_message)
-        self.db.add(ai_msg)
+        try:
+            config = GenerationConfig(response_mime_type="application/json")
+            response = self.model.generate_content(prompt, generation_config=config)
+            response_data = json.loads(response.text)
+
+            ai_msg = models.ChatMessage(document_id=doc_id, role='tutor_ai', content=response.text)
+            self.db.add(ai_msg)
+            self.db.commit()
+
+            return response_data
+
+        except Exception as e:
+            print(f"Tutor Error: {e}")
+            # Fallback
+            return {"status": "neutral", "text": "Hiba történt. Folytassuk...", "is_finish": False}
+
+
+    def reset_tutor_history(self, doc_id: int):
+        self.db.query(models.ChatMessage).filter(
+            models.ChatMessage.document_id == doc_id,
+            models.ChatMessage.role.in_(['tutor_ai', 'tutor_user'])
+        ).delete(synchronize_session=False)
+
         self.db.commit()
-
-        return next_ai_message
+        return True
 
 # Mind Map services
 
