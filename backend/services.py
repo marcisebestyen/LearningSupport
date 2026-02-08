@@ -8,7 +8,7 @@ import models
 import os
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
 import json
 from google.generativeai.types import GenerationConfig
@@ -18,6 +18,7 @@ from sqlalchemy import text as sql_text
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
+# --- Document services ---
 
 class DocumentService:
     def __init__(self):
@@ -200,6 +201,8 @@ class DocumentService:
                 "references": []
             }
 
+# --- User services
+
 class UserService:
     def create_user(self, db: Session, username: str, hashed_pass: str):
         user = models.User(username=username, hashed_password=hashed_pass)
@@ -212,6 +215,7 @@ class UserService:
     def get_user_by_username(self, db: Session, username: str):
         return db.query(models.User).filter(models.User.username == username).first()
 
+# --- Quiz and Flashcard services
 
 class QuizService:
     def __init__(self, db: Session = None):
@@ -405,6 +409,7 @@ class QuizService:
             return quiz
         return None
 
+# --- Chat services
 
 class ChatService:
     def __init__(self, db: Session):
@@ -455,11 +460,100 @@ class ChatService:
         return answer_text
 
 
-    def get_chat_history(self, doc_id: int):
-        return (self.db.query(models.ChatMessage)
-                .filter(models.ChatMessage.document_id == doc_id)
-                .order_by(models.ChatMessage.created_at.asc()).all())
+    def get_chat_history(self, doc_id: int, mode: str = 'chat'):
+        query = self.db.query(models.ChatMessage).filter(
+            models.ChatMessage.document_id == doc_id,
+        )
 
+        if mode == 'tutor':
+            query = query.filter(models.ChatMessage.role.in_(['tutor_ai', 'tutor_user']))
+        else:
+            query = query.filter(models.ChatMessage.role.in_(['ai', 'user']))
+
+        return query.order_by(models.ChatMessage.created_at.asc()).all()
+
+    def start_socratic_session(self, doc_id: int):
+        doc = self.db.query(models.Document).filter(
+            models.Document.id == doc_id
+        ).first()
+        if not doc:
+            return None
+
+        existing_history = self.db.query(models.ChatMessage).filter(
+            models.ChatMessage.document_id == doc_id,
+            models.ChatMessage.role.in_(['tutor_ai', 'tutor_user'])
+        ).all()
+        if existing_history:
+            return existing_history[-1].content
+
+        prompt = f"""
+                You are a Socratic Tutor. Your goal is to test the student's understanding of the text below.
+
+                RULES:
+                1. Do NOT summarize the text.
+                2. Ask ONE specific, open-ended question based on the text to start the discussion.
+                3. The question should require understanding, not just copy-pasting.
+                4. Output language: HUNGARIAN.
+
+                Text to teach:
+                {doc.content[:30000]}
+
+                Start with the first question now.
+                """
+
+        response = self.model.generate_content(prompt)
+        ai_question = response.text
+
+        ai_msg = models.ChatMessage(document_id=doc_id, role='tutor_ai', content=ai_question)
+        self.db.add(ai_msg)
+        self.db.commit()
+
+        return ai_question
+
+
+    def handle_tutor_response(self, doc_id: int, user_answer: str):
+        usr_msg = models.ChatMessage(document_id=doc_id, role='tutor_user', content=user_answer)
+        self.db.add(usr_msg)
+        self.db.commit()
+
+        history = self.get_chat_history(doc_id, mode='tutor')
+
+        doc = self.db.query(models.Document).filter(
+            models.Document.id == doc_id,
+        ).first()
+        context_text = doc.content[:30000]
+
+        conversation_history = "\n".join(
+            [f"{'AI' if 'ai' in msg.role else 'Student'}: {msg.content}" for msg in history[-6:]])
+
+        prompt = f"""
+                You are a Socratic Tutor teaching the text below.
+
+                Context Text:
+                {context_text}
+
+                Current Conversation History:
+                {conversation_history}
+
+                Your Task:
+                1. Analyze the USER's last answer.
+                2. If the answer is WRONG: Gently correct them and explain why based on the text. Then ask a simpler follow-up question.
+                3. If the answer is CORRECT: Praise them briefly, then ask a DEEPER, more complex follow-up question to test their logic.
+                4. If the answer is PARTIAL: Acknowledge the correct part, point out the missing part, and ask them to clarify.
+                5. Keep your response concise (max 3-4 sentences).
+                6. Language: HUNGARIAN.
+                """
+
+        response = self.model.generate_content(prompt)
+        next_ai_message = response.text
+
+        ai_msg = models.ChatMessage(document_id=doc_id, role='tutor_ai', content=next_ai_message)
+        self.db.add(ai_msg)
+        self.db.commit()
+
+        return next_ai_message
+
+# Mind Map services
 
 class MindMapService:
     def __init__(self, db: Session):
@@ -551,6 +645,7 @@ class MindMapService:
             })
         return results
 
+# --- Google Drive services
 
 class GoogleDriveService:
     def __init__(self):

@@ -304,12 +304,51 @@ def chat_with_document(
 @app.get("/documents/{doc_id}/chat", response_model=List[schemas.ChatMessageResponse])
 def get_chat_history(
         doc_id: int,
+        mode: str = 'chat',
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
 ):
     service = services.ChatService(db)
-    return service.get_chat_history(doc_id)
+    return service.get_chat_history(doc_id, mode=mode)
 
+
+@app.post("/documents/{doc_id}/tutor/start")
+def start_tutor(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.ChatService(db)
+
+    doc = db.query(models.Document).filter(
+        models.Document.id == doc_id,
+        models.Document.owner_id == current_user.id
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    question = service.start_socratic_session(doc_id)
+    return {"message": question}
+
+
+@app.post("/documents/{doc_id}/tutor/reply")
+def reply_tutor(
+        doc_id: int,
+        chat_req: schemas.ChatRequest,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.ChatService(db)
+
+    doc = db.query(models.Document).filter(
+        models.Document.id == doc_id,
+        models.Document.owner_id == current_user.id
+    ).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    response = service.handle_tutor_response(doc_id, chat_req.question)
+    return {"answer": response}
 
 # --- Audio Endpoints ---
 

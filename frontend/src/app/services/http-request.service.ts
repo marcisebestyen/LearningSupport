@@ -102,8 +102,16 @@ export class HttpRequestService {
     return this.http.post<any>(`${this.baseUrl}/documents/${docId}/chat`, { question }, { headers: this.getHeaders() });
   }
 
-  loadChatHistoryRequest(docId: number) {
-    return this.http.get<any[]>(`${this.baseUrl}/documents/${docId}/chat`, { headers: this.getHeaders() });
+  loadChatHistoryRequest(docId: number, mode: 'chat' | 'tutor' = 'chat') {
+    return this.http.get<any[]>(`${this.baseUrl}/documents/${docId}/chat?mode=${mode}`, { headers: this.getHeaders() });
+  }
+
+  startTutorSessionRequest(docId: number) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/tutor/start`, {}, { headers: this.getHeaders() });
+  }
+
+  replyToTutorRequest(docId: number, answer: string) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/tutor/reply`, { question: answer }, { headers: this.getHeaders() });
   }
 
   // audio services

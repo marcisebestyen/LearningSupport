@@ -36,13 +36,15 @@ export class HistoryComponent implements AfterViewChecked {
 
     return list.filter(doc => doc.category === filter);
   });
-  chatMessages = signal<{role: 'user' | 'ai', text: string}[]>([]);
+  chatMessages = signal<{role: string, text: string}[]>([]);
   chatInput = signal('');
   isChatLoading = signal(false);
   showChat = signal(false);
   isGeneratingCards = signal(false);
   isGeneratingMindMap = signal(false);
   isGeneratingAudio = signal(false);
+  isTutorMode = signal(false);
+  activeTab = signal<'summary' | 'chat' | 'tutor'>('summary');
 
   ngOnInit() {
     this.loadHistory();
@@ -224,21 +226,99 @@ export class HistoryComponent implements AfterViewChecked {
       return;
     }
 
+    const currentTab = this.activeTab();
+
     this.chatMessages.update(msgs => [...msgs, { role: 'user', text }]);
     this.chatInput.set('');
     this.isChatLoading.set(true);
 
-    this.httpService.chatWithDocRequest(this.selectedDocId()!, text)
-      .pipe(
-        finalize(() => this.isChatLoading.set(false))
-      )
-      .subscribe({
-        next: (res) => {
-          this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]);
-        },
-        error: (error) => {
-          console.error('Failed to update chat: ', error);
-        }
+    const docId = this.selectedDocId();
+
+    if (currentTab === 'tutor') {
+      this.httpService.replyToTutorRequest(docId!, text)
+        .pipe(finalize(() => this.isChatLoading.set(false)))
+        .subscribe({
+          next: (res) => this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]),
+          error: () => this.isChatLoading.set(false)
+        });
+    } else {
+      this.httpService.chatWithDocRequest(docId!, text)
+        .pipe(finalize(() => this.isChatLoading.set(false)))
+        .subscribe({
+          next: (res) => this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]),
+          error: () => this.isChatLoading.set(false)
+        });
+    }
+  }
+
+  toggleTutorMode() {
+    if (!this.isTutorMode()) {
+      const docId = this.selectedDocId();
+      if (!docId) return;
+
+      this.isTutorMode.set(true);
+      this.chatMessages.set([]);
+      this.isChatLoading.set(true);
+      this.showChat.set(true);
+
+      this.httpService.startTutorSessionRequest(docId)
+        .pipe(
+          finalize(() => this.isTutorMode.set(false))
+        )
+        .subscribe({
+          next: (res) => {
+            this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.message }]);
+          },
+          error: (error) => {
+            console.error('Failed to update chat: ', error);
+          }
+        });
+    } else {
+      this.isTutorMode.set(false);
+
+      if (this.selectedDocId()) { this.loadChatHistory(this.selectedDocId()!); }
+    }
+  }
+
+  switchTab(tab: 'summary' | 'chat' | 'tutor') {
+    this.activeTab.set(tab);
+
+    if (tab === 'summary') return;
+
+    const docId = this.selectedDocId();
+    this.isChatLoading.set(true);
+
+    if (tab === 'chat') {
+      this.httpService.loadChatHistoryRequest(docId!, 'chat')
+        .pipe(finalize(() => this.isChatLoading.set(false)))
+        .subscribe(msgs => this.mapMessages(msgs));
+    } else if (tab === 'tutor') {
+      this.httpService.loadChatHistoryRequest(docId!, 'tutor')
+        .pipe(finalize(() => this.isChatLoading.set(false)))
+        .subscribe(msgs => {
+          this.mapMessages(msgs);
+
+          if (msgs.length === 0) {
+            this.startTutor();
+          }
+        });
+    }
+  }
+
+  mapMessages(msgs: any[]) {
+    const formatted = msgs.map(m => ({
+      role: (m.role === 'user' || m.role === 'tutor_user') ? 'user' : 'ai',
+      text: m.content
+    }));
+    this.chatMessages.set(formatted);
+  }
+
+  startTutor() {
+    this.isChatLoading.set(true);
+    this.httpService.startTutorSessionRequest(this.selectedDocId()!)
+      .pipe(finalize(() => this.isChatLoading.set(false)))
+      .subscribe(res => {
+        this.chatMessages.update(m => [...m, {role: 'ai', text: res.message || res}]);
       });
   }
 }
