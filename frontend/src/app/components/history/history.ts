@@ -241,7 +241,6 @@ export class HistoryComponent implements AfterViewChecked {
         .pipe(finalize(() => this.isChatLoading.set(false)))
         .subscribe({
           next: (res) => {
-            // this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]);
             if (res.is_finish) {
               this.sessionFinished.set(true);
             }
@@ -254,7 +253,9 @@ export class HistoryComponent implements AfterViewChecked {
       this.httpService.chatWithDocRequest(docId!, text)
         .pipe(finalize(() => this.isChatLoading.set(false)))
         .subscribe({
-          next: (res) => this.chatMessages.update(msgs => [...msgs, { role: 'ai', text: res.answer }]),
+          next: (res) => {
+            this.typeWriterEffect(res.answer(), 'neutral');
+          },
           error: () => this.isChatLoading.set(false)
         });
     }
