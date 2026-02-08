@@ -1,6 +1,5 @@
 import io
 import re
-
 import fitz
 import google.generativeai as genai
 from gtts import gTTS
@@ -60,7 +59,11 @@ class DocumentService:
         return "\n".join(text_content)
 
 
-    def generate_summary(self, text: str) -> str:
+    def generate_summary(self, text: str, references: list[str] = None) -> str:
+        ref_text = ""
+        if references:
+            ref_text = "\n\n### 📚 Ajálott irodalom & Források\n" + "\n".join([f"* {ref}" for ref in references])
+
         prompt = f"""
         Analyze the following document. Output the summary explicitly in HUNGARIAN.
         Structure it for a student.
@@ -74,7 +77,8 @@ class DocumentService:
         """
         try:
             response = self.model.generate_content(prompt)
-            return response.text
+            summary = response.text
+            return summary + ref_text
         except Exception as e:
             print(f"AI Error: {e}")
             return "Hiba történt az összefoglaló generálása közben."
@@ -164,6 +168,37 @@ class DocumentService:
             print(f"gTTS Error: {e}")
             raise e
 
+
+    def validate_content(self, text: str) -> dict:
+        prompt = f"""
+                Act as a strict Fact-Checker and Librarian. Analyze the text below (first 15000 chars).
+
+                Tasks:
+                1. VALIDATION: Determine if this is a coherent, factually possible text (scientific, fictional story, history, etc.) OR if it is incoherent/blatant generated nonsense/fake news.
+                2. RESOURCES: If it is Valid, provide 3 real-world book titles or reliable URLs relevant to the topic.
+
+                Text Preview:
+                {text[:15000]}
+
+                Output JSON format ONLY:
+                {{
+                    "is_valid": boolean,
+                    "warning_message": "String explaining why it looks fake (or null if valid)",
+                    "references": ["Title/URL 1", "Title/URL 2", "Title/URL 3"]
+                }}
+                """
+
+        try:
+            config = GenerationConfig(response_mime_type="application/json")
+            response = self.model.generate_content(prompt, generation_config=config)
+            return json.loads(response.text)
+        except Exception as e:
+            print("Validation error: ", e)
+            return {
+                "is_valid": True,
+                "warning_message": "⚠️ Technical Error: Validation could not be completed. The document content was not verified.",
+                "references": []
+            }
 
 class UserService:
     def create_user(self, db: Session, username: str, hashed_pass: str):

@@ -1,7 +1,7 @@
 import os
 import fitz
 import google.generativeai as genai
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Form, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -90,6 +90,7 @@ ALLOWED_MIME_TYPES = [
 async def upload_file(
         file: UploadFile = File(...),
         category: str = Form(None),
+        force_upload: bool = Form(False),
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
 ):
@@ -108,7 +109,24 @@ async def upload_file(
         print(f"Extraction error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process file content")
 
-    summary = doc_service.generate_summary(content)
+    references = []
+
+    if not force_upload:
+        validation_result = doc_service.validate_content(content)
+
+        if not validation_result.get("is_valid", True):
+            warning = validation_result.get("warning_message", "A dokumentum tartalma megkérdőjelezhető.")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"VALIDATION_FAILED: {warning}"
+            )
+
+        if validation_result.get("warning_message"):
+            print(f"Upload proceeded with warning: {validation_result['warning_message']}")
+
+        references = validation_result.get("references", [])
+
+    summary = doc_service.generate_summary(content, references=references)
     doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category)
     return doc
 

@@ -74,10 +74,12 @@ export class FileUploadComponent {
   }
 
   startUpload() {
+    this.executeUpload(false);
+  }
+
+  executeUpload(force: boolean) {
     const file = this.selectedFile();
-    if (!file) {
-      return;
-    }
+    if (!file) { return; }
 
     let finalCategory = this.selectedCategory();
     if (this.isAddingNewCategory()) {
@@ -85,21 +87,40 @@ export class FileUploadComponent {
     }
 
     this.isLoading.set(true);
-    this.uploadStatus.set('Uploading...');
+    this.uploadStatus.set(force ? 'Forcing upload...' : 'Analyzing document...');
 
-    this.httpService.uploadFileRequest(file, finalCategory)
+    this.httpService.uploadFileRequest(file, finalCategory, force)
       .subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.uploadStatus.set('Done');
+          this.uploadStatus.set('Done!');
           this.router.navigate(['/history']);
         },
         error: (error) => {
           this.isLoading.set(false);
-          this.uploadStatus.set('Error uploading file!');
-          console.error(error);
+
+          if (error.status === 409) {
+            this.handleValidationError(error.error.detail);
+          } else {
+            this.uploadStatus.set('Error uploading file!');
+            console.error(error);
+          }
         }
-      })
+      });
+  }
+
+  handleValidationError(detailString: string) {
+    const cleanMsg = detailString.replace('VALIDATION_FAILED:', '').trim();
+
+    const userWantsToProceed = confirm(
+      `⚠️ AI Warning: The content of this document appears to be invalid or "fake".\n\nReason: ${cleanMsg}\n\nDo you want to proceed anyway?`
+    );
+
+    if (userWantsToProceed) {
+      this.executeUpload(true);
+    } else {
+      this.uploadStatus.set('Upload cancelled by user.');
+    }
   }
 
   isValidFile(file: File): boolean {
