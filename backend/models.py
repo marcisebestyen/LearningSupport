@@ -56,6 +56,12 @@ class EssaySubmission(Base):
     document = relationship("Document", back_populates="essays")
     owner = relationship("User", back_populates="essays")
 
+    @property
+    def document_filename(self):
+        if self.document:
+            return self.document.filename
+        return "Unknown Document"
+
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"

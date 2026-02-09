@@ -84,6 +84,7 @@ class EssayGradeResponse(BaseModel):
     general_feedback: str
     detailed_analysis: List[GradeSegment]
     created_at: datetime
+    document_filename: str | None = None
 
     class Config:
         from_attributes = True

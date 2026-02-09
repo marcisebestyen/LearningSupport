@@ -475,7 +475,8 @@ async def grade_essay_file(
         "overall_score": result.overall_score,
         "general_feedback": result.general_feedback,
         "detailed_analysis": result.feedback_json,
-        "created_at": result.created_at
+        "created_at": result.created_at,
+        "document_filename": result.document.filename if result.document else "Unknown Document"
     }
 
 
@@ -501,12 +502,14 @@ def grade_essay(
     if not result:
         raise HTTPException(status_code=500, detail="Failed to grade essay. AI error.")
 
+
     return {
         "id": doc.id,
         "overall_score": result.overall_score,
         "general_feedback": result.general_feedback,
         "detailed_analysis": result.feedback_json,
-        "created_at": result.created_at
+        "created_at": result.created_at,
+        "document_filename": result.document.filename if result.document else "Unknown Document"
     }
 
 
@@ -524,7 +527,8 @@ def list_essays(
             "overall_score": e.overall_score,
             "general_feedback": e.general_feedback,
             "detailed_analysis": e.feedback_json,
-            "created_at": e.created_at
+            "created_at": e.created_at,
+            "document_filename": e.document.filename if e.document else "Unknown Document"
         }
         for e in essays
     ]
@@ -546,6 +550,7 @@ def get_essay_detail(
         "id": essay.id,
         "overall_score": essay.overall_score,
         "general_feedback": essay.general_feedback,
-        "detailed_analysis": essay.feedback_json,
-        "created_at": essay.created_at
+        "detailed_analysis": essay.feedback_json,  
+        "created_at": essay.created_at,
+        "document_filename": essay.document.filename if essay.document else "Unknown Document"
     }

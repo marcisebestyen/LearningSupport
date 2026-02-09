@@ -8,7 +8,8 @@ import { FlashcardsComponent } from './components/flashcards/flashcards';
 import { FlashcardPlayerComponent } from './components/flashcard-player/flashcard-player';
 import { MindmapsComponent } from './components/mindmaps/mindmaps';
 import { MindmapPlayerComponent } from './components/mindmap-player/mindmap-player';
-import {AudioPlayerComponent} from './components/audio-player/audio-player';
+import { AudioPlayerComponent } from './components/audio-player/audio-player';
+import { EssaysComponent } from './components/essays/essays';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'upload', pathMatch: 'full' },
@@ -22,4 +23,6 @@ export const routes: Routes = [
   { path: 'mindmaps', component: MindmapsComponent },
   { path: 'mindmap-player/:id', component: MindmapPlayerComponent },
   { path: 'audios', component: AudioPlayerComponent },
+  { path: 'essays', component: EssaysComponent },
+  { path: 'essays/:id', component: EssaysComponent },
 ];

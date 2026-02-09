@@ -865,13 +865,17 @@ class GraderService:
 
 
     def get_user_essays(self, user_id: int):
-        return self.db.query(models.EssaySubmission).filter(
+        return (self.db.query(models.EssaySubmission).options(
+            joinedload(models.EssaySubmission.document),
+        ).filter(
             models.EssaySubmission.owner_id == user_id
-        ).order_by(models.EssaySubmission.created_at.desc()).all()
+        ).order_by(models.EssaySubmission.created_at.desc()).all())
 
 
     def get_essay_by_id(self, essay_id: int, user_id: int):
-        return self.db.query(models.EssaySubmission).filter(
+        return self.db.query(models.EssaySubmission).options(
+            joinedload(models.EssaySubmission.document),
+        ).filter(
             models.EssaySubmission.id == essay_id,
             models.EssaySubmission.owner_id == user_id
         ).first()

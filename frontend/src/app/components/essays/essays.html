@@ -1,0 +1,79 @@
+<div class="layout">
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>My Essays</h3>
+    </div>
+
+    <div class="sidebar-list">
+      @if (essayList().length === 0) {
+        <p class="empty-msg">No essays graded yet.</p>
+      }
+
+      @for (item of essayList(); track item.id) {
+        <div class="list-item"
+             [class.selected]="selectedEssay()?.id === item.id"
+             (click)="selectEssay(item.id)">
+
+          <div class="score-badge" [style.borderColor]="getScoreColor(item.overall_score)">
+            {{ item.overall_score }}
+          </div>
+
+          <div class="info">
+            <span class="title" title="{{ item.displayTitle }}">{{ item.displayTitle }}</span>
+            <span class="date">{{ item.created_at | date:'mediumDate' }}</span>
+          </div>
+
+          <div class="arrow">›</div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    @if (isLoading()) {
+      <div class="placeholder">
+        <div class="spinner"></div>
+        <p>Loading correction...</p>
+      </div>
+    }
+    @else if (!selectedEssay()) {
+      <div class="placeholder">
+        <span class="icon">📝</span>
+        <p>Select an essay from the sidebar to review the grading.</p>
+      </div>
+    }
+    @else {
+      <div class="grade-report fade-in">
+
+        <div class="report-header">
+          <div class="score-circle" [style.borderColor]="getScoreColor(selectedEssay().overall_score)">
+            <span>{{ selectedEssay().overall_score }}</span>
+            <small>/100</small>
+          </div>
+          <div class="feedback-summary">
+            <h2>Professor's Feedback</h2>
+            <p>{{ selectedEssay().general_feedback }}</p>
+          </div>
+        </div>
+
+        <div class="detailed-analysis">
+          <h3>Line-by-Line Correction</h3>
+          <div class="text-flow">
+            @for (segment of selectedEssay().detailed_analysis; track $index) {
+              <span class="segment"
+                    [class.correct]="segment.status === 'correct'"
+                    [class.partial]="segment.status === 'partial'"
+                    [class.incorrect]="segment.status === 'incorrect'">
+                {{ segment.segment_text }}
+                <span class="tooltip">{{ segment.feedback }}</span>
+              </span>
+            }
+          </div>
+        </div>
+
+      </div>
+    }
+  </div>
+</div>
