@@ -14,6 +14,7 @@ class User(Base):
 
     documents = relationship("Document", back_populates="owner")
     quizzes = relationship("Quiz", back_populates="owner")
+    essays = relationship("EssaySubmission", back_populates="owner")
 
 
 class Document(Base):
@@ -35,6 +36,25 @@ class Document(Base):
     messages = relationship("ChatMessage", back_populates="document", cascade="all, delete-orphan")
     flashcard_sets = relationship("FlashcardSet", back_populates="document", cascade="all, delete-orphan")
     mind_maps = relationship("MindMap", back_populates="document", cascade="all, delete-orphan")
+    essays = relationship("EssaySubmission", back_populates="document", cascade="all, delete-orphan")
+
+
+class EssaySubmission(Base):
+    __tablename__ = "essay_submissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
+    essay_content = Column(Text, nullable=False)
+    feedback_json = Column(JSON, nullable=False)
+    overall_score = Column(Integer, default=0)
+    general_feedback = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    document = relationship("Document", back_populates="essays")
+    owner = relationship("User", back_populates="essays")
 
 
 class ChatMessage(Base):

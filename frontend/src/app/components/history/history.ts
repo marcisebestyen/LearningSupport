@@ -5,11 +5,12 @@ import { HttpRequestService } from '../../services/http-request.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import {DragDropDirective} from '../../directives/drag-drop';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule, MarkdownModule, FormsModule],
+  imports: [CommonModule, MarkdownModule, FormsModule, DragDropDirective],
   templateUrl: './history.html',
   styleUrl: './history.scss'
 })
@@ -43,9 +44,15 @@ export class HistoryComponent implements AfterViewChecked {
   isGeneratingCards = signal(false);
   isGeneratingMindMap = signal(false);
   isGeneratingAudio = signal(false);
-  activeTab = signal<'summary' | 'chat' | 'tutor'>('summary');
+  activeTab = signal<'summary' | 'chat' | 'tutor' | 'grader'>('summary');
   isTyping = signal(false);
   sessionFinished = signal(false);
+  essayInputMode = signal<'type' | 'upload'>('type');
+  essayText = signal('');
+  essayFile = signal<File | null>(null);
+  isGrading = signal(false);
+  gradedResult = signal<any | null>(null);
+  pastEssays = signal<any[]>([]);
 
   ngOnInit() {
     this.loadHistory();
@@ -260,7 +267,7 @@ export class HistoryComponent implements AfterViewChecked {
     }
   }
 
-  switchTab(tab: 'summary' | 'chat' | 'tutor') {
+  switchTab(tab: 'summary' | 'chat' | 'tutor' | 'grader') {
     this.activeTab.set(tab);
 
     if (tab !== 'tutor') {
@@ -271,6 +278,10 @@ export class HistoryComponent implements AfterViewChecked {
 
     const docId = this.selectedDocId();
     this.isChatLoading.set(true);
+
+    if (tab === 'grader') {
+      this.loadEssayHistory();
+    }
 
     if (tab === 'chat') {
       this.httpService.loadChatHistoryRequest(docId!, 'chat')
@@ -385,5 +396,87 @@ export class HistoryComponent implements AfterViewChecked {
         this.isTyping.set(false);
       }
     }, speed);
+  }
+
+  onEssayFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.essayFile.set(file);
+    }
+  }
+
+  submitEssay() {
+    const docId = this.selectedDocId();
+    if (!docId) return;
+
+    this.isGrading.set(true);
+    this.gradedResult.set(null);
+
+    if (this.essayInputMode() === 'type') {
+      this.httpService.gradeEssayTextRequest(docId, this.essayText())
+        .pipe(finalize(() => this.isGrading.set(false)))
+        .subscribe({
+          next: (res) => {
+            this.gradedResult.set(res);
+          },
+          error: (error) => {
+            console.error("Error grading essay.", error);
+          }
+        });
+    } else {
+      const file = this.essayFile();
+      if (!file) {
+        this.isGrading.set(false);
+        return;
+      }
+
+      this.httpService.gradeEssayFileRequest(docId, file)
+        .pipe(finalize(() => this.isGrading.set(false)))
+        .subscribe({
+          next: (res) => {
+            this.gradedResult.set(res);
+          },
+          error: (error) => {
+            console.error("Error grading essay.", error);
+          }
+        });
+    }
+  }
+
+  loadEssayHistory() {
+    this.httpService.getAllEssaysRequest()
+      .subscribe({
+        next: (allEssays) => {
+          const relevant = allEssays.filter(e => e.document_id === this.selectedDocId());
+          relevant.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+          this.pastEssays.set(allEssays);
+        }
+      });
+  }
+
+  viewPastEssay(essayId: number) {
+    this.isGrading.set(true);
+
+    this.httpService.getEssayDetailRequest(essayId)
+      .pipe(finalize(() => this.isGrading.set(false)))
+      .subscribe({
+        next: (fullDetails) => {
+          this.gradedResult.set(fullDetails);
+        },
+        error: (err) => console.error("Could not load essay details", err)
+      });
+  }
+
+  resetEssay() {
+    this.gradedResult.set(null);
+    this.essayText.set('');
+    this.essayFile.set(null);
+  }
+
+  getScoreColor(score: number): string {
+    if (score >= 80) return '#2ecc71';
+    if (score >= 50) return '#f1c40f';
+    return '#e74c3c';
   }
 }

@@ -47,22 +47,19 @@
         </div>
 
         <div class="view-toggle">
-          <button
-            [class.active]="activeTab() === 'summary'"
-            (click)="switchTab('summary')">
+          <button [class.active]="activeTab() === 'summary'" (click)="switchTab('summary')">
             📄 Summary
           </button>
 
-          <button
-            [class.active]="activeTab() === 'chat'"
-            (click)="switchTab('chat')">
+          <button [class.active]="activeTab() === 'grader'" (click)="switchTab('grader')" class="grader-btn">
+            📝 Essay Grader
+          </button>
+
+          <button [class.active]="activeTab() === 'chat'" (click)="switchTab('chat')">
             💬 AI Chat
           </button>
 
-          <button
-            [class.active]="activeTab() === 'tutor'"
-            (click)="switchTab('tutor')"
-            class="tutor-btn">
+          <button [class.active]="activeTab() === 'tutor'" (click)="switchTab('tutor')" class="tutor-btn">
             🎓 Socratic Tutor
           </button>
         </div>
@@ -122,9 +119,8 @@
 
               @for (msg of chatMessages(); track $index) {
                 <div class="msg-row" [class.user]="msg.role === 'user'">
-                  <div class="msg-bubble"
-                  [class.status-correct]="msg.status === 'correct'"
-                  [class.status-incorrect]="msg.status === 'incorrect'">
+                  <div class="msg-bubble" [class.status-correct]="msg.status === 'correct'"
+                       [class.status-incorrect]="msg.status === 'incorrect'">
                     <div class="sender">
                       {{ msg.role === 'user' ? 'You' : (activeTab() === 'tutor' ? 'Socratic Tutor' : 'AI Assistant') }}
                     </div>
@@ -144,12 +140,9 @@
 
             <div class="chat-input-area">
               <div class="input-box">
-                <input
-                  [(ngModel)]="chatInput"
-                  (keyup.enter)="!sessionFinished() && sendMessage()"
-                  [placeholder]="sessionFinished() ? 'Session Finished. Refresh to start over.' : (activeTab() === 'tutor' ? 'Type your answer here...' : 'Ask a question...')"
-                  [disabled]="isChatLoading() || sessionFinished()"
-                >
+                <input [(ngModel)]="chatInput" (keyup.enter)="!sessionFinished() && sendMessage()"
+                       [placeholder]="sessionFinished() ? 'Session Finished. Refresh to start over.' : (activeTab() === 'tutor' ? 'Type your answer here...' : 'Ask a question...')"
+                       [disabled]="isChatLoading() || sessionFinished()">
 
                 @if (sessionFinished()) {
                   <button class="restart-btn" (click)="restartTutor()">
@@ -162,8 +155,95 @@
                 }
               </div>
             </div>
-            </div>
+          </div>
         }
+
+        @if (activeTab() === 'grader') {
+          <div class="grader-layout fade-in">
+
+            <div class="essay-history-list">
+              <h4>Previous Attempts</h4>
+              @if (pastEssays().length === 0) {
+                <p class="no-essays">No essays submitted yet.</p>
+              }
+
+              @for (essay of pastEssays(); track essay.id) {
+                <div class="history-card" (click)="viewPastEssay(essay.id)">
+                  <div class="score-badge" [style.borderColor]="getScoreColor(essay.overall_score)">
+                    {{ essay.overall_score }}%
+                  </div>
+                  <div class="meta">
+                    <span class="date">{{ essay.created_at | date:'shortDate' }}</span>
+                    <span class="snippet">{{ essay.general_feedback | slice:0:20 }}...</span>
+                  </div>
+                </div>
+              }
+              <button class="new-attempt-btn" (click)="resetEssay()">+ New Attempt</button>
+            </div>
+
+            <div class="essay-content-area">
+
+              @if (gradedResult(); as result) {
+                <div class="grade-report">
+                  <div class="score-header">
+                    <div class="score-circle" [style.border-color]="getScoreColor(result.overall_score)">
+                      <span>{{ result.overall_score }}</span>
+                      <small>/100</small>
+                    </div>
+                    <div class="general-feedback">
+                      <h3>Overall Feedback</h3>
+                      <p>{{ result.general_feedback }}</p>
+                    </div>
+                    <button class="reset-btn" (click)="resetEssay()">New Essay</button>
+                  </div>
+
+                  <div class="detailed-review">
+                    <h3>Detailed Analysis</h3>
+                    <div class="essay-text-flow">
+                      @for (segment of result.detailed_analysis; track $index) {
+                        <span class="essay-segment" [class.seg-correct]="segment.status === 'correct'"
+                              [class.seg-partial]="segment.status === 'partial'"
+                              [class.seg-incorrect]="segment.status === 'incorrect'">
+                  {{ segment.segment_text }}
+                          <span class="tooltip">{{ segment.feedback }}</span>
+                </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @else {
+                <div class="essay-input-wrapper">
+                  <div class="mode-toggle">
+                    <button [class.active]="essayInputMode() === 'type'" (click)="essayInputMode.set('type')">✍️ Type Manually</button>
+                    <button [class.active]="essayInputMode() === 'upload'" (click)="essayInputMode.set('upload')">📂 Upload File</button>
+                  </div>
+
+                  @if (essayInputMode() === 'type') {
+                    <textarea [(ngModel)]="essayText" placeholder="Write or paste your essay here..."></textarea>
+                  }
+
+                  @if (essayInputMode() === 'upload') {
+                    <div class="mini-drop-zone" appDragDrop>
+                      <input type="file" (change)="onEssayFileSelected($event)" accept=".pdf,.docx">
+                      <div class="icon">📂</div>
+                      <p>{{ essayFile()?.name || 'Drag file or Click to Browse' }}</p>
+                    </div>
+                  }
+
+                  <div class="submit-area">
+                    <button class="grade-btn" (click)="submitEssay()" [disabled]="isGrading()">
+                      @if(isGrading()) { <div class="spinner"></div> Grading... }
+                      @else { 🎓 Grade My Essay }
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
       </div>
     }
   </div>

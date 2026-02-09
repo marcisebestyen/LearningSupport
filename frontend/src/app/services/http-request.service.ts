@@ -39,7 +39,7 @@ export class HttpRequestService {
 
     formData.append('force_upload', String(force));
 
-    return this.http.post<any>(`${this.baseUrl}/upload/`, formData, { headers: this.getHeaders() });
+    return this.http.post<any>(`${this.baseUrl}/upload`, formData, { headers: this.getHeaders() });
   }
 
   loadHistoryRequest() {
@@ -133,5 +133,26 @@ export class HttpRequestService {
       headers: this.getHeaders(),
       responseType: 'blob'
     });
+  }
+
+  // grader / essay services
+
+  gradeEssayTextRequest(docId: number, text: string) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/essay/grade`, { essay_text: text }, { headers: this.getHeaders() });
+  }
+
+  gradeEssayFileRequest(docId: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/essay/upload_grade`, formData, { headers: this.getHeaders() });
+  }
+
+  getEssayDetailRequest(essayId: number) {
+    return this.http.get<any>(`${this.baseUrl}/essays/${essayId}`, { headers: this.getHeaders() });
+  }
+
+  getAllEssaysRequest() {
+    return this.http.get<any[]>(`${this.baseUrl}/essays`, { headers: this.getHeaders() });
   }
 }
