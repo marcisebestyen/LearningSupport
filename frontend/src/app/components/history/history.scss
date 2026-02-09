@@ -236,6 +236,51 @@
     ul, ol { padding-left: 1.5rem; margin-bottom: 1em; }
     code { background: #2d2d2d; padding: 2px 5px; border-radius: 4px; color: #e09f7d; }
     pre { background: #252526; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+
+    .second-brain-container {
+      margin-top: 3rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(155, 89, 182, 0.5);
+      background-color: rgba(30, 30, 30, 0.8);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+
+      .sb-header {
+        background: linear-gradient(90deg, rgba(155, 89, 182, 0.2) 0%, rgba(30, 30, 30, 0) 100%);
+        padding: 12px 20px;
+        border-bottom: 1px solid rgba(155, 89, 182, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .sb-icon {
+          font-size: 1.4rem;
+          filter: drop-shadow(0 0 5px rgba(155, 89, 182, 0.6));
+        }
+
+        .sb-title {
+          color: #d6bcfa;
+          font-weight: 700;
+          font-size: 1rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          font-family: 'Segoe UI', sans-serif;
+        }
+      }
+
+      .sb-content {
+        padding: 20px;
+        color: #e2e8f0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        display: block;
+        word-wrap: break-word;
+
+        p:first-child { margin-top: 0; }
+        p:last-child { margin-bottom: 0; }
+      }
+    }
   }
 }
 

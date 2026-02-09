@@ -201,6 +201,70 @@ class DocumentService:
                 "references": []
             }
 
+
+    def find_cross_references(self, db: Session, current_doc_id: int, content: str, user_id: int):
+        new_embedding = self._get_embedding(content[:2000])
+
+        query = sql_text(f"""
+        SELECT d.filename, dc.content, d.id
+        FROM document_chunks dc
+            JOIN documents d ON d.id = dc.document_id
+        WHERE d.id != :current_doc_id
+            AND d.owner_id = :user_id
+        ORDER BY d.embedding <=> :embedding
+        LIMIT 3 
+        """)
+
+        results = db.execute(query, {
+            "user_id": user_id,
+            "current_doc_id": current_doc_id,
+            "embedding": str(new_embedding)
+        }).fetchall()
+        if not results:
+            return ""
+
+        cross_context = "\n".join([f"Source ({r[0]}): {r[1]}" for r in results])
+
+        prompt = f"""
+                You are a 'Second Brain' assistant.
+                Analyze connections between the new document and previous ones.
+
+                New Document: {content[:3000]}
+                Previous Snippets: {cross_context}
+
+                TASK:
+                Write a concise 'Cross-Reference' note (Hungarian).
+                1. Explain the connection/similarity.
+                2. Reference the old filenames explicitly.
+                3. Do NOT include a Title or Header. Start directly with the text.
+                """
+
+        try:
+            response = self.model.generate_content(prompt)
+            ai_text = response.text.strip()
+
+            ai_text_html = ai_text.replace("\n", "<br>")
+
+            ai_text_html = re.sub(r'^#+\s*', '', ai_text_html)
+            ai_text_html = re.sub(r'\*\*', '', ai_text_html)
+
+            formatted_html = (
+                f'<div class="second-brain-container">'
+                f'<div class="sb-header">'
+                f'<span class="sb-icon">🧠</span>'
+                f'<span class="sb-title">Másodlagos Agy &middot; Kapcsolódó Ismeretek</span>'
+                f'</div>'
+                f'<div class="sb-content">{ai_text_html}</div>'
+                f'</div>'
+            )
+
+            return formatted_html
+
+        except Exception as e:
+            print(f"Error getting cross reference: {e}")
+            return ""
+
+
 # --- User services
 
 class UserService:
@@ -415,7 +479,6 @@ class ChatService:
     def __init__(self, db: Session):
         self.db = db
         self.model = genai.GenerativeModel('gemini-2.5-flash')
-
 
     def ask_document(self, doc_id: int, question: str):
         usr_msg = models.ChatMessage(document_id=doc_id, role='user', content=question)
