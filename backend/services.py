@@ -782,3 +782,100 @@ class GoogleDriveService:
     def stream_audio(self, file_id):
         request = self.service.files().get_media(fileId=file_id)
         return request.execute()
+
+
+class GraderService:
+    def __init__(self, db: Session):
+        self.db = db
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
+
+
+    def evaluate_essay(self, doc_id: int, user_id: int, essay_text: str):
+        doc = self.db.query(models.Document).filter(
+            models.Document.id == doc_id
+        ).first()
+
+        if not doc:
+            raise ValueError("Document not found.")
+
+        prompt = f"""
+                You are a strict academic professor. Your task is to grade a Student Essay based ONLY on the provided Source Material.
+
+                Source Material:
+                {doc.content[:30000]}
+
+                Student Essay:
+                {essay_text}
+
+                TASK:
+                1. Analyze the essay sentence by sentence (or logical segment).
+                2. Compare each segment to the Source Material.
+                3. Assign a status:
+                   - "correct" (Green): Factually accurate according to source.
+                   - "partial" (Yellow): Sort of correct, but missing context, slightly vague, or minor logical flaw.
+                   - "incorrect" (Red): Factually wrong, hallucinated, or completely contradictory to the source.
+                4. Provide a brief correction/comment for each segment.
+                5. Give an overall score (0-100) and a general summary.
+
+                OUTPUT JSON FORMAT ONLY:
+                {{
+                    "overall_score": 85,
+                    "general_feedback": "A summary of the student's performance...",
+                    "segments": [
+                        {{
+                            "segment_text": "The exact text from the student essay being graded.",
+                            "status": "correct",
+                            "feedback": "Correct. This aligns with the section on..."
+                        }},
+                        {{
+                            "segment_text": "However, the date was 1999.",
+                            "status": "incorrect",
+                            "feedback": "Incorrect. The source states the date was 1990."
+                        }}
+                    ]
+                }}
+
+                Language: HUNGARIAN.
+                """
+
+        try:
+            config = GenerationConfig(response_mime_type='application/json')
+            response = self.model.generate_content(prompt, generation_config=config)
+
+            result_json = json.loads(response.text)
+
+            submission = models.EssaySubmission(
+                document_id=doc_id,
+                owner_id=user_id,
+                essay_content=essay_text,
+                feedback_json=result_json.get('segments', []),
+                overall_score=result_json.get('overall_score', 0),
+                general_feedback=result_json.get('general_feedback', "Nincs általános visszajelzés.")
+            )
+
+            self.db.add(submission)
+            self.db.commit()
+            self.db.refresh(submission)
+
+            return submission
+
+        except Exception as e:
+            print(f"Grading Error: {e}")
+            return None
+
+
+    def get_user_essays(self, user_id: int):
+        return (self.db.query(models.EssaySubmission).options(
+            joinedload(models.EssaySubmission.document),
+        ).filter(
+            models.EssaySubmission.owner_id == user_id
+        ).order_by(models.EssaySubmission.created_at.desc()).all())
+
+
+    def get_essay_by_id(self, essay_id: int, user_id: int):
+        return self.db.query(models.EssaySubmission).options(
+            joinedload(models.EssaySubmission.document),
+        ).filter(
+            models.EssaySubmission.id == essay_id,
+            models.EssaySubmission.owner_id == user_id
+        ).first()

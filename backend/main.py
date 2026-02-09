@@ -444,3 +444,113 @@ def get_audios(
             "audio_url": f"/audios/{a.id}/play"
         } for a in audios
     ]
+
+# --- Essay / Grader endpoints ---
+
+@app.post("/documents/{doc_id}/essay/upload_grade", response_model=schemas.EssayGradeResponse)
+async def grade_essay_file(
+        doc_id: int,
+        file: UploadFile = File(...),
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type")
+
+    file_bytes = await file.read()
+    try:
+        essay_content = doc_service.extract_text(file_bytes, file.filename)
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Text extraction failed: {str(e)}")
+
+    grader_service = services.GraderService(db)
+    result = grader_service.evaluate_essay(doc_id, current_user.id, essay_content)
+
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to grade essay")
+
+    return {
+        "id": result.id,
+        "overall_score": result.overall_score,
+        "general_feedback": result.general_feedback,
+        "detailed_analysis": result.feedback_json,
+        "created_at": result.created_at,
+        "document_filename": result.document.filename if result.document else "Unknown Document"
+    }
+
+
+@app.post("/documents/{doc_id}/essay/grade", response_model=schemas.EssayGradeResponse)
+def grade_essay(
+        doc_id: int,
+        submission: schemas.EssaySubmitRequest,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    grader_service = services.GraderService(db)
+
+    doc = db.query(models.Document).filter(
+        models.Document.id == doc_id,
+        models.Document.owner_id == current_user.id
+    ).first()
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    result = grader_service.evaluate_essay(doc_id, current_user.id, submission.essay_text)
+
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to grade essay. AI error.")
+
+
+    return {
+        "id": doc.id,
+        "overall_score": result.overall_score,
+        "general_feedback": result.general_feedback,
+        "detailed_analysis": result.feedback_json,
+        "created_at": result.created_at,
+        "document_filename": result.document.filename if result.document else "Unknown Document"
+    }
+
+
+@app.get("/essays", response_model=List[schemas.EssayGradeResponse])
+def list_essays(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    grader_service = services.GraderService(db)
+    essays = grader_service.get_user_essays(current_user.id)
+
+    return [
+        {
+            "id": e.id,
+            "overall_score": e.overall_score,
+            "general_feedback": e.general_feedback,
+            "detailed_analysis": e.feedback_json,
+            "created_at": e.created_at,
+            "document_filename": e.document.filename if e.document else "Unknown Document"
+        }
+        for e in essays
+    ]
+
+
+@app.get("/essays/{essay_id}", response_model=schemas.EssayGradeResponse)
+def get_essay_detail(
+        essay_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    grader_service = services.GraderService(db)
+    essay = grader_service.get_essay_by_id(essay_id, current_user.id)
+
+    if not essay:
+        raise HTTPException(status_code=404, detail="Essay not found")
+
+    return {
+        "id": essay.id,
+        "overall_score": essay.overall_score,
+        "general_feedback": essay.general_feedback,
+        "detailed_analysis": essay.feedback_json,  
+        "created_at": essay.created_at,
+        "document_filename": essay.document.filename if essay.document else "Unknown Document"
+    }
