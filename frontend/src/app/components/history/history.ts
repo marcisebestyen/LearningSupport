@@ -43,7 +43,6 @@ export class HistoryComponent implements AfterViewChecked {
   isGeneratingCards = signal(false);
   isGeneratingMindMap = signal(false);
   isGeneratingAudio = signal(false);
-  isTutorMode = signal(false);
   activeTab = signal<'summary' | 'chat' | 'tutor'>('summary');
   isTyping = signal(false);
   sessionFinished = signal(false);
@@ -254,7 +253,7 @@ export class HistoryComponent implements AfterViewChecked {
         .pipe(finalize(() => this.isChatLoading.set(false)))
         .subscribe({
           next: (res) => {
-            this.typeWriterEffect(res.answer(), 'neutral');
+            this.typeWriterEffect(res.answer, 'neutral');
           },
           error: () => this.isChatLoading.set(false)
         });
@@ -263,6 +262,10 @@ export class HistoryComponent implements AfterViewChecked {
 
   switchTab(tab: 'summary' | 'chat' | 'tutor') {
     this.activeTab.set(tab);
+
+    if (tab !== 'tutor') {
+      this.sessionFinished.set(false);
+    }
 
     if (tab === 'summary') return;
 

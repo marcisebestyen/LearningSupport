@@ -128,6 +128,12 @@ async def upload_file(
 
     summary = doc_service.generate_summary(content, references=references)
     doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category)
+    cross_ref_note = doc_service.find_cross_references(db, doc.id, content, current_user.id)
+
+    if cross_ref_note:
+        doc.summary += cross_ref_note
+        db.commit()
+
     return doc
 
 

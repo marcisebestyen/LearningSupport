@@ -23,24 +23,35 @@
 
         <div class="audio-engine">
           @if (playingDocId() === audio.id) {
-            <div class="player-controls">
-              <audio #player autoplay [src]="audioBlobUrl()" (ended)="stopAudio()"></audio>
+            <div class="player-controls fade-in">
+              <audio #player
+                     autoplay
+                     [src]="audioBlobUrl()"
+                     (timeupdate)="onTimeUpdate($event)"
+                     (loadedmetadata)="onLoadedMetadata($event)"
+                     (ended)="stopAudio()">
+              </audio>
 
               <div class="control-row">
-                <button (click)="seek(player, -10)" class="icon-btn">⏪</button>
+                <button (click)="seek(player, -10)" class="icon-btn" title="-10s">⏪</button>
+
                 <button (click)="togglePlay(player)" class="play-pause-btn">
-                  {{ player.paused ? '▶️' : '⏸️' }}
+                  @if (isPaused()) { <span>▶️</span> }
+                  @else { <span>⏸️</span> }
                 </button>
-                <button (click)="seek(player, 10)" class="icon-btn">⏩</button>
+
+                <button (click)="seek(player, 10)" class="icon-btn" title="+10s">⏩</button>
               </div>
 
               <div class="progress-container">
-                <div class="time">{{ player.currentTime | number:'1.0-0' }}s</div>
+                <span class="time">{{ formatTime(currentTime()) }}</span>
+
                 <input type="range" class="seeker"
-                       [max]="player.duration || 0"
-                       [value]="player.currentTime"
+                       [max]="duration()"
+                       [value]="currentTime()"
                        (input)="onSeekInput($event, player)">
-                <div class="time">{{ player.duration | number:'1.0-0' }}s</div>
+
+                <span class="time">{{ formatTime(duration()) }}</span>
               </div>
             </div>
           } @else {

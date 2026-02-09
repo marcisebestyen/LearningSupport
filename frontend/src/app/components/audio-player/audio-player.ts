@@ -15,6 +15,9 @@ export class AudioPlayerComponent implements OnInit {
   audioList = signal<any[]>([]);
   playingDocId = signal<number | null>(null);
   audioBlobUrl = signal<string | null>(null);
+  currentTime = signal(0);
+  duration = signal(0);
+  isPaused = signal(false);
 
   ngOnInit() {
     this.httpService.loadAudiosRequest()
@@ -25,11 +28,10 @@ export class AudioPlayerComponent implements OnInit {
       );
   }
 
-  getAudioUrl(docId: number) {
-    return `http://localhost:8000/audios/${docId}/play`;
-  }
-
   startAudio(id: number) {
+    this.currentTime.set(0);
+    this.duration.set(0);
+    this.isPaused.set(false);
     this.playingDocId.set(id);
 
     this.httpService.playAudioRequest(id)
@@ -43,11 +45,31 @@ export class AudioPlayerComponent implements OnInit {
 
   stopAudio() {
     this.playingDocId.set(null);
+    this.audioBlobUrl.set(null);
+    this.currentTime.set(0);
+    this.isPaused.set(false);
+  }
+
+  onTimeUpdate(event: any) {
+    const audio = event.target as HTMLAudioElement;
+    this.currentTime.set(audio.currentTime);
+  }
+
+  onLoadedMetadata(event: any) {
+    const audio = event.target as HTMLAudioElement;
+    this.duration.set(audio.duration);
+    this.isPaused.set(audio.paused);
   }
 
   togglePlay(player: HTMLAudioElement) {
-    if (player.paused) { player.play(); }
-    else { player.pause(); }
+    if (player.paused) {
+      player.play();
+      this.isPaused.set(false);
+    }
+    else {
+      player.pause();
+      this.isPaused.set(true);
+    }
   }
 
   seek(player: HTMLAudioElement, seconds: number) {
@@ -56,5 +78,12 @@ export class AudioPlayerComponent implements OnInit {
 
   onSeekInput(event: any, player: HTMLAudioElement) {
     player.currentTime = event.target.value;
+  }
+
+  formatTime(seconds: number): string {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   }
 }
