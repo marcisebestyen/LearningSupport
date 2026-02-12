@@ -29,15 +29,21 @@ export class HttpRequestService {
 
   // document services
 
-  uploadFileRequest(file: File, category: string = '', force: boolean = false) {
+  uploadFileRequest(file: File, category: string, studyFocus: string, force: boolean) {
     const formData = new FormData();
     formData.append('file', file);
 
-    if (category && category.trim() !== '') {
+    if (category) {
       formData.append('category', category);
     }
 
-    formData.append('force_upload', String(force));
+    if (studyFocus) {
+      formData.append('study_focus', studyFocus);
+    }
+
+    if (force) {
+      formData.append('force_upload', 'true');
+    }
 
     return this.http.post<any>(`${this.baseUrl}/upload`, formData, { headers: this.getHeaders() });
   }
@@ -154,5 +160,19 @@ export class HttpRequestService {
 
   getAllEssaysRequest() {
     return this.http.get<any[]>(`${this.baseUrl}/essays`, { headers: this.getHeaders() });
+  }
+
+  // study plan services
+
+  getStudyPlansRequest() {
+    return this.http.get<any[]>(`${this.baseUrl}/study-plans`, { headers: this.getHeaders() });
+  }
+
+  getStudyPlanRequest(docId: number) {
+    return this.http.get<any>(`${this.baseUrl}/study-plans/${docId}`, { headers: this.getHeaders() });
+  }
+
+  createStudyPlanRequest(docId: number) {
+    return this.http.post<any>(`${this.baseUrl}/documents/${docId}/plan`, {}, { headers: this.getHeaders() });
   }
 }

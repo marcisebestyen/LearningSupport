@@ -30,6 +30,8 @@ export class FileUploadComponent {
   newCategoryInput = signal<string>('');
   isAddingNewCategory = signal<boolean>(false);
 
+  studyFocus = signal<string>('');
+
   history = signal<any[]>([]);
 
   constructor(private httpService: HttpRequestService, private router: Router) { }
@@ -86,10 +88,12 @@ export class FileUploadComponent {
       finalCategory = this.newCategoryInput();
     }
 
+    const focusTopic = this.studyFocus();
+
     this.isLoading.set(true);
     this.uploadStatus.set(force ? 'Forcing upload...' : 'Analyzing document...');
 
-    this.httpService.uploadFileRequest(file, finalCategory, force)
+    this.httpService.uploadFileRequest(file, finalCategory, focusTopic, force)
       .subscribe({
         next: () => {
           this.isLoading.set(false);

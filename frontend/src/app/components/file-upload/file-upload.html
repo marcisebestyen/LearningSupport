@@ -40,6 +40,22 @@
 
         <hr class="divider">
 
+        <div class="input-section">
+          <label>🎯 Study Focus (Optional)</label>
+          <p class="helper-text">
+            Uploading a whole book? Tell the AI which chapter or topic to summarize.
+            <br><em>(Leave empty to summarize the entire document)</em>
+          </p>
+          <div class="input-group">
+            <input
+              type="text"
+              [ngModel]="studyFocus()"
+              (ngModelChange)="studyFocus.set($event)"
+              placeholder="e.g. 'Chapter 4: The Cold War' or 'Only organic chemistry sections'"
+            >
+          </div>
+        </div>
+
         <div class="category-section">
           <label>Category (Optional)</label>
 

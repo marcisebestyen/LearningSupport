@@ -1,0 +1,129 @@
+<div class="study-layout">
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>My Study Plans</h3>
+    </div>
+
+    <div class="sidebar-list">
+      @for (doc of plans(); track doc.id) {
+        <div class="plan-item"
+             [class.active]="selectedPlanId() === doc.id"
+             (click)="selectPlan(doc)">
+          <div class="icon">🎓</div>
+          <div class="info">
+            <span class="title">{{ doc.filename }}</span>
+
+            <span class="sub" *ngIf="doc.study_focus">Focus: {{ doc.study_focus }}</span>
+
+            <span class="meta-badge">{{ doc.total_days }} Day Plan</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="main-stage">
+
+    @if (!selectedPlanId()) {
+      <div class="empty-state">
+        <div class="emoji">🗺️</div>
+        <h2>Select a Study Path</h2>
+        <p>Choose a document from the left to view your AI-generated schedule.</p>
+      </div>
+    } @else if (loading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Retrieving your mission data...</p>
+      </div>
+    } @else if (selectedPlanData().length === 0) {
+      <div class="empty-state">
+        <h2>No Plan Yet</h2>
+        <p>You haven't generated a study plan for this document yet.</p>
+        <button class="generate-btn" (click)="generatePlan()">Generate Plan Now</button>
+      </div>
+    } @else {
+
+      <div class="plan-dashboard">
+        <header class="plan-header">
+          <div class="titles">
+            <h1>{{ selectedDocFilename() }}</h1>
+            <span class="badge">{{ selectedPlanData().length }} Day Plan</span>
+          </div>
+          <div class="progress-indicator">
+            <span>Day {{ activeDayIndex() + 1 }} of {{ selectedPlanData().length }}</span>
+          </div>
+        </header>
+
+        <div class="split-view">
+
+          <div class="timeline-col">
+            <div class="timeline-line"></div>
+
+            @for (day of selectedPlanData(); track day.day; let i = $index) {
+              <div class="timeline-node"
+                   [class.active]="i === activeDayIndex()"
+                   [class.past]="i < activeDayIndex()"
+                   (click)="selectDay(i)">
+
+                <div class="node-circle">
+                  @if (i < activeDayIndex()) { ✓ }
+                  @else { {{ day.day }} }
+                </div>
+
+                <div class="node-label">
+                  <span class="day-text">Day {{ day.day }}</span>
+                  <span class="topic-preview">{{ day.topic | slice:0:25 }}...</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="activity-col">
+            @if (currentDayData(); as day) {
+              <div class="day-card fade-in">
+
+                <div class="day-header">
+                  <span class="day-tag">DAY {{ day.day }}</span>
+                  <h2>{{ day.topic }}</h2>
+                </div>
+
+                <div class="tasks-container">
+                  <h3>📝 Today's Objectives</h3>
+                  <ul class="task-list">
+                    @for (act of day.activities; track act) {
+                      <li class="task-item">
+                        <label class="custom-checkbox">
+                          <input type="checkbox">
+                          <span class="checkmark"></span>
+                          <span class="text">{{ act }}</span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </div>
+
+                <div class="actions-container">
+                  <h3>🚀 Tools for Today</h3>
+                  <div class="buttons-grid">
+                    <button class="action-btn quiz" (click)="startQuiz()">
+                      <span class="icon">✨</span>
+                      <span>Start Quiz</span>
+                    </button>
+                    <button class="action-btn flash" (click)="startFlashcards()">
+                      <span class="icon">🎴</span>
+                      <span>Flashcards</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            }
+          </div>
+
+        </div>
+      </div>
+    }
+
+  </div>
+</div>
