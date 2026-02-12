@@ -90,6 +90,7 @@ ALLOWED_MIME_TYPES = [
 async def upload_file(
         file: UploadFile = File(...),
         category: str = Form(None),
+        study_focus: str = Form(None),
         force_upload: bool = Form(False),
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(auth.get_current_user)
@@ -126,9 +127,14 @@ async def upload_file(
 
         references = validation_result.get("references", [])
 
-    summary = doc_service.generate_summary(content, references=references)
-    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category)
+    summary = doc_service.generate_summary(content, references=references, study_focus=study_focus)
+    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category, study_focus)
     cross_ref_note = doc_service.find_cross_references(db, doc.id, content, current_user.id)
+
+    if study_focus:
+        print(f"--- Auto generating Study Plan for {study_focus} ---")
+        plan_service = services.StudyPlanService(db)
+        plan_service.generate_study_plan(doc.id, current_user.id)
 
     if cross_ref_note:
         doc.summary += cross_ref_note
@@ -554,3 +560,52 @@ def get_essay_detail(
         "created_at": essay.created_at,
         "document_filename": essay.document.filename if essay.document else "Unknown Document"
     }
+
+
+# --- Study Plan endpoints ---
+
+@app.post("/documents/{doc_id}/plan", response_model=schemas.StudyPlanResponse)
+def create_study_plan(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.StudyPlanService(db)
+    plan = service.generate_study_plan(doc_id, current_user.id)
+
+    if not plan:
+        raise HTTPException(status_code=500, detail="Failed to generate study plan")
+
+    return {
+        "id": plan.id,
+        "document_id": doc_id,
+        "plan": plan.plan_json,
+    }
+
+
+@app.get("/study-plans/{doc_id}", response_model=schemas.StudyPlanResponse)
+def get_study_plan(
+        doc_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.StudyPlanService(db)
+    plan = service.get_plan_by_id(doc_id, current_user.id)
+
+    if not plan:
+        raise HTTPException(status_code=404, detail="Study plan not found.")
+
+    return {
+        "id": plan.id,
+        "document_id": doc_id,
+        "plan": plan.plan_json,
+    }
+
+
+@app.get("/study-plans", response_model=List[schemas.StudyPlanListResponse])
+def list_study_plans(
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.StudyPlanService(db)
+    return service.get_user_study_plans(current_user.id)

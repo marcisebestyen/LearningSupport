@@ -27,6 +27,7 @@ class Document(Base):
     summary = Column(Text, nullable=True)
     embedding = Column(Vector(768), nullable=True)
     category = Column(String, nullable=True)
+    study_focus = Column(String, nullable=True)
     google_drive_id = Column(String, nullable=True)
 
     owner_id = Column(Integer, ForeignKey("users.id"))
@@ -37,6 +38,7 @@ class Document(Base):
     flashcard_sets = relationship("FlashcardSet", back_populates="document", cascade="all, delete-orphan")
     mind_maps = relationship("MindMap", back_populates="document", cascade="all, delete-orphan")
     essays = relationship("EssaySubmission", back_populates="document", cascade="all, delete-orphan")
+    study_plan = relationship("StudyPlan", back_populates="document", uselist=False, cascade="all, delete-orphan")
 
 
 class EssaySubmission(Base):
@@ -150,3 +152,14 @@ class MindMap(Base):
     mermaid_script = Column(Text, nullable=False)
 
     document = relationship("Document", back_populates="mind_maps")
+
+
+class StudyPlan(Base):
+    __tablename__ = "study_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    plan_json = Column(JSON, nullable=False)
+
+    document = relationship("Document", back_populates="study_plan")

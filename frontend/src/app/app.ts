@@ -27,6 +27,7 @@ export class AppComponent {
     if (url.includes('mindmaps')) return "My Mind Maps";
     if (url.includes('audios')) return "My Audios";
     if (url.includes('essays')) return 'My Essays';
+    if (url.includes('study-plans')) return 'My Study Plans';
     return 'Welcome';
   });
 

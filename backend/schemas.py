@@ -18,6 +18,7 @@ class DocumentResponse(DocumentBase):
     upload_date: datetime
     category: str | None = None
     has_audio: bool = False
+    study_focus: str | None = None
 
     class Config:
         from_attributes = True
@@ -85,6 +86,30 @@ class EssayGradeResponse(BaseModel):
     detailed_analysis: List[GradeSegment]
     created_at: datetime
     document_filename: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class StudyPlanItem(BaseModel):
+    day: int
+    topic: str
+    activities: List[str]
+
+
+class StudyPlanResponse(BaseModel):
+    id: int
+    document_id: int
+    plan: List[StudyPlanItem]
+
+
+class StudyPlanListResponse(BaseModel):
+    id: int
+    plan_id: int
+    filename: str
+    study_focus: str | None = None
+    created_at: datetime
+    total_days: int
 
     class Config:
         from_attributes = True

@@ -60,15 +60,28 @@ class DocumentService:
         return "\n".join(text_content)
 
 
-    def generate_summary(self, text: str, references: list[str] = None) -> str:
+    def generate_summary(self, text: str, references: list[str] = None, study_focus: str = None) -> str:
         ref_text = ""
         if references:
             ref_text = "\n\n### 📚 Ajálott irodalom & Források\n" + "\n".join([f"* {ref}" for ref in references])
 
+        if study_focus:
+            instruction = f"""
+            The user has uploaded a large document but ONLY wants to focus on this topic: "{study_focus}".
+            
+            TASK:
+            1. Scan the text provided.
+            2. Locate the sections relevant to "{study_focus}".
+            3. Ignore unrelated chapters/sections.
+            4. Create a summary ONLY for the requested topic in HUNGARIAN.
+            """
+        else:
+            instruction = "Analyze the following document. Output the summary explicitly in HUNGARIAN."
+
         prompt = f"""
-        Analyze the following document. Output the summary explicitly in HUNGARIAN.
+        {instruction}
         Structure it for a student.
-        Text: {text[:30000]}
+        Text content (partial): {text[:50000]}
         
         IMPORTANT FORMATTING RULES:
         1. Do NOT use code blocks (```) for the text.
@@ -85,13 +98,14 @@ class DocumentService:
             return "Hiba történt az összefoglaló generálása közben."
 
 
-    def save_document(self, db: Session, filename: str, content: str, summary: str, user_id: int, category: str = None):
+    def save_document(self, db: Session, filename: str, content: str, summary: str, user_id: int, category: str = None, study_focus: str = None):
         new_doc = models.Document(
             filename=filename,
             content=content,
             summary=summary,
             owner_id=user_id,
-            category=category
+            category=category,
+            study_focus=study_focus
         )
         db.add(new_doc)
         db.commit()
@@ -783,6 +797,8 @@ class GoogleDriveService:
         request = self.service.files().get_media(fileId=file_id)
         return request.execute()
 
+# --- Essay / Grader services
+
 
 class GraderService:
     def __init__(self, db: Session):
@@ -878,4 +894,108 @@ class GraderService:
         ).filter(
             models.EssaySubmission.id == essay_id,
             models.EssaySubmission.owner_id == user_id
+        ).first()
+
+# --- Study Plan services ---
+
+class StudyPlanService:
+    def __init__(self, db: Session):
+        self.db = db
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
+
+
+    def generate_study_plan(self, doc_id: int, user_id: int):
+        doc = self.db.query(models.Document).filter(
+            models.Document.id == doc_id,
+            models.Document.owner_id == user_id
+        ).first()
+
+        if not doc:
+            return None
+
+        focus_instruction = ""
+        if doc.study_focus:
+            focus_instruction = f"The student ONLY wants to learn about: '{doc.study_focus}'. Ignore other topics in the text."
+
+        prompt = f"""
+        Act as a professional educational consultant. 
+        Create a structured Study Plan based on the text below.
+        
+        {focus_instruction}
+        
+        Rules:
+        1. Analyze the complexity and length of the relevant text.
+        2. Break it down into logical "Days" (e.g., 3 days, 5 days, or 2 weeks depending on depth).
+        3. For each day, suggest specific sub-topics and activities (Reading, Quiz, Flashcards, Essay).
+        4. Output PURE JSON format.
+        5. Language: HUNGARIAN.
+        
+        JSON Structure:
+        [
+            {{
+                "day": 1,
+                "topic": "Introduction to...",
+                "activities": ["Read Section 1", "Create Mindmap", "Review Flashcards"]
+            }},
+            ...
+        ]
+        
+        Text:
+        {doc.content[:60000]}
+        """
+
+        try:
+            config = GenerationConfig(response_mime_type='application/json')
+            response = self.model.generate_content(prompt, generation_config=config)
+            plan_json = json.loads(response.text)
+
+            existing_plan = self.db.query(models.StudyPlan).filter(
+                models.StudyPlan.document_id == doc_id
+            ).first()
+
+            if existing_plan:
+                existing_plan.plan_json = plan_json
+                self.db.commit()
+                return existing_plan
+            else:
+                new_plan = models.StudyPlan(
+                    document_id=doc_id,
+                    plan_json=plan_json,
+                )
+                self.db.add(new_plan)
+                self.db.commit()
+                self.db.refresh(new_plan)
+                return new_plan
+
+        except Exception as e:
+            print(f"Study Plan error: {e}")
+            return None
+
+
+    def get_user_study_plans(self, user_id: int):
+        plans = self.db.query(models.StudyPlan).join(models.Document).filter(
+            models.Document.owner_id == user_id
+        ).order_by(models.StudyPlan.created_at.desc()).all()
+
+        results = []
+        for p in plans:
+            total_days = 0
+            if isinstance(p.plan_json, list):
+                total_days = len(p.plan_json)
+
+            results.append({
+                "id": p.document.id,
+                "plan_id": p.id,
+                "filename": p.document.filename,
+                "study_focus": p.document.study_focus,
+                "created_at": p.created_at,
+                "total_days": total_days,
+            })
+        return results
+
+
+    def get_plan_by_id(self, doc_id: int, user_id: int):
+        return self.db.query(models.StudyPlan).filter(
+            models.StudyPlan.document_id == doc_id,
+            models.Document.owner_id == user_id
         ).first()

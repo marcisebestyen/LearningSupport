@@ -10,6 +10,7 @@ import { MindmapsComponent } from './components/mindmaps/mindmaps';
 import { MindmapPlayerComponent } from './components/mindmap-player/mindmap-player';
 import { AudioPlayerComponent } from './components/audio-player/audio-player';
 import { EssaysComponent } from './components/essays/essays';
+import { StudyPlansComponent } from './components/study-plans/study-plans';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'upload', pathMatch: 'full' },
@@ -25,4 +26,5 @@ export const routes: Routes = [
   { path: 'audios', component: AudioPlayerComponent },
   { path: 'essays', component: EssaysComponent },
   { path: 'essays/:id', component: EssaysComponent },
+  { path: 'study-plans', component: StudyPlansComponent },
 ];
