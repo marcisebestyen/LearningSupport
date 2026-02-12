@@ -583,6 +583,30 @@ def create_study_plan(
     }
 
 
+@app.put("/documents/{doc_id}/plan", response_model=schemas.StudyPlanResponse)
+def update_study_plan(
+        doc_id: int,
+        plan_update: schemas.StudyPlanUpdate,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    service = services.StudyPlanService(db)
+    plan = service.get_plan_by_id(doc_id, current_user.id)
+
+    if not plan:
+        raise HTTPException(status_code=404, detail="Study plan not found.")
+
+    plan.plan_json = plan_update.plan_json
+    db.commit()
+    db.refresh(plan)
+
+    return {
+        "id": plan.id,
+        "document_id": doc_id,
+        "plan": plan.plan_json,
+    }
+
+
 @app.get("/study-plans/{doc_id}", response_model=schemas.StudyPlanResponse)
 def get_study_plan(
         doc_id: int,

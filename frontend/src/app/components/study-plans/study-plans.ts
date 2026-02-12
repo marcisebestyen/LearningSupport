@@ -9,6 +9,7 @@ interface StudyDay {
   topic: string;
   activities: string[];
   icCompleted?: boolean;
+  activityStatuses?: boolean[];
 }
 
 @Component({
@@ -105,4 +106,28 @@ export class StudyPlansComponent {
         }
       })
   }
+
+  toggleActivity(dayIndex: number, activityIndex: number, event: any) {
+    const isChecked = event.target.checked;
+    const currentPlan = this.selectedPlanData();
+
+    const updatedPlan = JSON.parse(JSON.stringify(currentPlan));
+
+    if (!updatedPlan[dayIndex].activityStatuses) {
+      updatedPlan[dayIndex].activityStatuses = new Array(updatedPlan[dayIndex].activities.length).fill(false);
+    }
+
+    updatedPlan[dayIndex].activityStatuses[activityIndex] = isChecked;
+
+    this.selectedPlanData.set(updatedPlan);
+
+    const docId = this.selectedPlanId();
+    if (docId) {
+      this.httpService.updatePlanRequest(docId, updatedPlan).subscribe({
+        next: () => console.log('Progress saved!'),
+        error: (err) => console.error('Failed to save progress', err)
+      });
+    }
+  }
 }
+

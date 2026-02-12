@@ -164,6 +164,10 @@ export class HttpRequestService {
 
   // study plan services
 
+  updatePlanRequest(docId: number, updatedPlan: any[]) {
+    return this.http.put<any>(`${this.baseUrl}/documents/${docId}/plan`, { plan_json: updatedPlan }, { headers: this.getHeaders() });
+  }
+
   getStudyPlansRequest() {
     return this.http.get<any[]>(`${this.baseUrl}/study-plans`, { headers: this.getHeaders() });
   }
