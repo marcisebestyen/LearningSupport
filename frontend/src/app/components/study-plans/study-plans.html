@@ -94,7 +94,9 @@
                     @for (act of day.activities; track act) {
                       <li class="task-item">
                         <label class="custom-checkbox">
-                          <input type="checkbox">
+                          <input type="checkbox"
+                                 [checked]="day.activityStatuses ? day.activityStatuses[$index] : false"
+                                 (change)="toggleActivity(activeDayIndex(), $index, $event)">
                           <span class="checkmark"></span>
                           <span class="text">{{ act }}</span>
                         </label>

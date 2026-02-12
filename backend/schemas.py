@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 from datetime import datetime
 from typing import List, Literal
 
@@ -95,6 +96,12 @@ class StudyPlanItem(BaseModel):
     day: int
     topic: str
     activities: List[str]
+    activity_statuses: List[bool] | None = None
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
 
 
 class StudyPlanResponse(BaseModel):
@@ -113,3 +120,7 @@ class StudyPlanListResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class StudyPlanUpdate(BaseModel):
+    plan_json: List[dict]
