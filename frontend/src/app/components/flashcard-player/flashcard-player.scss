@@ -1,18 +1,21 @@
 .player-layout {
   display: flex;
   flex-direction: column;
-  height: 83.75vh;
+  min-height: 100vh;
   width: 100%;
   background-color: #121212;
   color: #e0e0e0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .header {
   display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
+  padding: clamp(1rem, 3vw, 1.5rem) clamp(1rem, 4vw, 2rem);
   border-bottom: 1px solid #333;
   background-color: #1e1e1e;
 
@@ -53,8 +56,8 @@
   align-items: center;
   justify-content: center;
   perspective: 1000px;
-  padding: 2rem;
-  gap: 3rem;
+  padding: clamp(1rem, 4vw, 2rem);
+  gap: clamp(1.5rem, 4vh, 3rem);
   background: radial-gradient(circle at center, #1e1e1e 0%, #121212 70%);
 }
 
@@ -66,9 +69,9 @@
 }
 
 .card-scene {
-  width: 600px;
-  max-width: 95%;
-  height: 380px;
+  width: 100%;
+  max-width: 600px;
+  height: clamp(280px, 50vh, 380px);
   position: relative;
   margin-bottom: 1rem;
 }
@@ -96,7 +99,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  box-sizing: border-box;
   text-align: center;
   box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   border: 1px solid #333;
@@ -114,7 +118,7 @@
   }
 
   .text {
-    font-size: 1.8rem;
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
     line-height: 1.5;
     color: #fff;
     font-weight: 500;
@@ -136,16 +140,24 @@
     border-color: #667eea;
 
     .hint { color: #667eea; }
-    .text { color: #e0e0e0; font-size: 1.4rem; }
+    .text {
+      color: #e0e0e0;
+      font-size: clamp(1rem, 4vw, 1.4rem);
+    }
   }
 }
 
 .controls {
   display: flex;
-  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 1.5rem);
   z-index: 10;
+  width: 100%;
+  max-width: 600px;
 
   button {
+    flex: 1 1 auto;
     padding: 12px 24px;
     border-radius: 8px;
     font-weight: 600;
