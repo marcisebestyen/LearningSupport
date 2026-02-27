@@ -12,7 +12,7 @@ RUN npm run build --configuration=production
 FROM nginx:alpine
 # Copy the compiled files from the build stage to Nginx
 # IMPORTANT: Change 'your-angular-app-name' to the actual name in your angular.json!
-COPY --from=build /app/dist/your-angular-app-name/browser /usr/share/nginx/html
+COPY --from=build /app/dist/frontend /usr/share/nginx/html
 # Expose port 80
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
