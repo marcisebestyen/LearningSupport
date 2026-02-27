@@ -24,7 +24,7 @@ services:
     networks:
       - learning_net
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DB_HOST=database 
     depends_on:

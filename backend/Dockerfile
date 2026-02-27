@@ -19,4 +19,4 @@ EXPOSE 8000
 # Command to run your app (Adjust this based on your framework!)
 # Example for FastAPI: CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 # Example for Flask: CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
-CMD ["python", "app.py"]
+CMD sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"

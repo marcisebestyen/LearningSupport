@@ -1,0 +1,9 @@
+.git
+.github
+node_modules
+dist
+postgres-data
+__pycache__
+*.pyc
+.env
+.DS_Store
