@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/alembic/versions/799d9bd0ea80_initial_complete_schema.py" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/main.py" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/services.py" dialect="GenericSQL" />
   </component>

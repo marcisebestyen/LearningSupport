@@ -2,10 +2,13 @@ import sys
 import os
 from logging.config import fileConfig
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+import models
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 

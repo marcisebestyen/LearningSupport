@@ -13,6 +13,7 @@ import schemas
 import services
 from database import engine
 import models
+from models import Base
 from typing import List
 from pydantic import BaseModel
 

@@ -1,5 +1,5 @@
 # Use an official, lightweight Python image
-FROM python:3.14-slim
+FROM python:3.12-slim
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -20,3 +20,4 @@ EXPOSE 8000
 # Example for FastAPI: CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 # Example for Flask: CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
 CMD sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
