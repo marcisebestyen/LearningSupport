@@ -42,9 +42,7 @@
     } @else {
 
       <div class="main-header">
-        <div class="doc-title">
-          <h2>{{ selectedFilename() }}</h2>
-        </div>
+        <h2 title="{{ selectedFilename() }}">{{ selectedFilename() }}</h2>
 
         <div class="view-toggle">
           <button [class.active]="activeTab() === 'summary'" (click)="switchTab('summary')" class="summary-btn">
