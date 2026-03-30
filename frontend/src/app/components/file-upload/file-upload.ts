@@ -14,23 +14,21 @@ import { Router } from '@angular/router';
   styleUrl: './file-upload.scss',
 })
 export class FileUploadComponent {
-  // File state
   selectedFile = signal<File | null>(null);
   fileName = signal<string>('');
   fileSize = signal<string>('');
 
-  // Upload state
   uploadStatus = signal<string>('');
   summary = signal<string>('');
   isLoading = signal<boolean>(false);
 
-  // Category state
+  documentTitle = signal<string>(''); // <-- NEW SIGNAL
+  studyFocus = signal<string>('');
+
   existingCategories = signal<string[]>([]);
   selectedCategory = signal<string>('');
   newCategoryInput = signal<string>('');
   isAddingNewCategory = signal<boolean>(false);
-
-  studyFocus = signal<string>('');
 
   history = signal<any[]>([]);
 
@@ -67,6 +65,9 @@ export class FileUploadComponent {
     this.fileName.set(file.name);
     this.fileSize.set((file.size / 1024).toFixed(2) + ' KB');
     this.uploadStatus.set('Ready to upload');
+
+    this.documentTitle.set('');
+    this.studyFocus.set('');
   }
 
   toggleNewCategory() {
@@ -89,11 +90,12 @@ export class FileUploadComponent {
     }
 
     const focusTopic = this.studyFocus();
+    const title = this.documentTitle(); // <-- GET TITLE
 
     this.isLoading.set(true);
     this.uploadStatus.set(force ? 'Forcing upload...' : 'Analyzing document...');
 
-    this.httpService.uploadFileRequest(file, finalCategory, focusTopic, force)
+    this.httpService.uploadFileRequest(file, finalCategory, focusTopic, force, title)
       .subscribe({
         next: () => {
           this.isLoading.set(false);
@@ -111,6 +113,12 @@ export class FileUploadComponent {
           }
         }
       });
+  }
+
+  cancelUpload() {
+    this.selectedFile.set(null);
+    this.documentTitle.set('');
+    this.studyFocus.set('');
   }
 
   handleValidationError(detailString: string) {

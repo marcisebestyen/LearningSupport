@@ -17,7 +17,7 @@ $text-dim: #888;
 }
 
 .history-sidebar {
-  width: clamp(250px, 25vw, 320px); // Fluid sidebar width
+  width: clamp(250px, 25vw, 320px);
   background-color: $bg-sidebar;
   border-right: 1px solid $border-color;
   display: flex;
@@ -200,16 +200,101 @@ $text-dim: #888;
   background: $bg-layout;
   z-index: 10;
 
-  h2 {
-    margin: 0;
-    color: #fff;
-    font-size: clamp(1.2rem, 3vw, 1.5rem);
-
-    flex: 1;
+  .doc-title-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 1 auto;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    margin-right: auto;
+
+    h2 {
+      margin: 0;
+      color: #fff;
+      font-size: 1.5rem;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .edit-title-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      opacity: 0.3;
+      transition: all 0.2s ease;
+      padding: 5px;
+      line-height: 1;
+
+      &:hover {
+        opacity: 1;
+        transform: scale(1.2) rotate(10deg);
+      }
+    }
+
+    .edit-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 250px;
+
+      .title-edit-input {
+        flex: 1;
+        width: 100%;
+        min-width: 50px;
+        background: #000;
+        border: 1px solid #667eea;
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        outline: none;
+        box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+      }
+
+      .edit-actions {
+        display: flex;
+        gap: 6px;
+
+        button {
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          font-weight: bold;
+        }
+
+        .save-btn {
+          background: #27ae60;
+          color: white;
+          &:hover {
+            background: #2ecc71;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+          }
+        }
+
+        .cancel-btn {
+          background: #333;
+          color: #aaa;
+          &:hover {
+            background: #444;
+            color: #fff;
+            transform: translateY(-2px);
+          }
+        }
+      }
+    }
   }
 }
 

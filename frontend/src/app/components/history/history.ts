@@ -51,6 +51,8 @@ export class HistoryComponent implements AfterViewChecked {
   essayText = signal('');
   essayFile = signal<File | null>(null);
   isGrading = signal(false);
+  isEditingTitle = signal(false);
+  editTitleInput = signal('');
 
   ngOnInit() {
     this.loadHistory();
@@ -67,7 +69,7 @@ export class HistoryComponent implements AfterViewChecked {
 
   selectDoc(item: any) {
     this.selectedSummary.set(item.summary);
-    this.selectedFilename.set(item.filename);
+    this.selectedFilename.set(item.title || item.filename);
     this.selectedDocId.set(item.id);
     this.showChat.set(false);
     this.loadChatHistory(item.id);
@@ -340,5 +342,32 @@ export class HistoryComponent implements AfterViewChecked {
       this.httpService.gradeEssayFileRequest(docId, file)
         .subscribe(observer);
     }
+  }
+
+  startEditingTitle() {
+    this.editTitleInput.set(this.selectedFilename());
+    this.isEditingTitle.set(true);
+  }
+
+  saveTitle() {
+    const docId = this.selectedDocId();
+    const newTitle = this.editTitleInput().trim();
+
+    if (!docId || !newTitle || newTitle === this.selectedFilename()) {
+      this.isEditingTitle.set(false);
+      return;
+    }
+
+    this.httpService.updateDocumentTitleRequest(docId, newTitle).subscribe({
+      next: () => {
+        this.selectedFilename.set(newTitle);
+        this.isEditingTitle.set(false);
+
+        this.history.update(list => list.map(doc =>
+          doc.id === docId ? { ...doc, title: newTitle } : doc
+        ));
+      },
+      error: (err) => console.error("Update failed", err)
+    });
   }
 }

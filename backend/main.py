@@ -90,6 +90,7 @@ ALLOWED_MIME_TYPES = [
 @app.post("/upload")
 async def upload_file(
         file: UploadFile = File(...),
+        title: str = Form(None),
         category: str = Form(None),
         study_focus: str = Form(None),
         force_upload: bool = Form(False),
@@ -129,7 +130,7 @@ async def upload_file(
         references = validation_result.get("references", [])
 
     summary = doc_service.generate_summary(content, references=references, study_focus=study_focus)
-    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category, study_focus)
+    doc = doc_service.save_document(db, file.filename, content, summary, current_user.id, category, study_focus, title)
     cross_ref_note = doc_service.find_cross_references(db, doc.id, content, current_user.id)
 
     if study_focus:
@@ -162,6 +163,30 @@ def delete_document(
         raise HTTPException(status_code=404, detail="Document not found or unauthorized")
 
     return {"message": "Document deleted successfully."}
+
+
+@app.patch("/documents/{doc_id}/title")
+def update_document_title(
+        doc_id: int,
+        update_data: schemas.DocumentTitleUpdate,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(auth.get_current_user)
+):
+    print(f"DEBUG: Hitting the route! Doc ID: {doc_id}, New Title: {update_data.title}")
+    doc = db.query(models.Document).filter(
+        models.Document.id == doc_id,
+        models.Document.owner_id == current_user.id
+    ).first()
+
+    if not doc:
+        print("DEBUG: Database couldn't find the document!")
+        raise HTTPException(status_code=404, detail="Document not found or unauthorized")
+
+    doc.title = update_data.title
+    db.commit()
+    db.refresh(doc)
+    return {"message": "Title updated successfully.", "title": doc.title}
+
 
 # --- Quiz Endpoints ---
 
@@ -260,7 +285,7 @@ def create_mindmap(
             "id": existing.id,
             "mermaid_script": existing.mermaid_script,
             "created_at": existing.created_at,
-            "document_filename": existing.document.filename,  # <--- FIX HERE (.document.filename)
+            "document_filename": existing.document.title if existing.document.title else existing.document.filename,
             "document_id": existing.document_id
         }
 
@@ -271,7 +296,7 @@ def create_mindmap(
         "id": mindmap.id,
         "mermaid_script": mindmap.mermaid_script,
         "created_at": mindmap.created_at,
-        "document_filename": mindmap.document.filename,
+        "document_filename": mindmap.document.title if mindmap.document.title else mindmap.document.filename,
         "document_id": mindmap.document_id,
     }
 
@@ -297,7 +322,7 @@ def get_mindmap_by_id(
         "id": mmap.id,
         "mermaid_script": mmap.mermaid_script,
         "created_at": mmap.created_at,
-        "document_filename": mmap.document.filename,
+        "document_filename": mmap.document.title if mmap.document.title else mmap.document.filename,
         "document_id": mmap.document.id,
     }
 
@@ -446,7 +471,7 @@ def get_audios(
     return [
         {
             "id": a.id,
-            "filename": a.filename,
+            "filename": a.title,
             "category": a.category,
             "audio_url": f"/audios/{a.id}/play"
         } for a in audios
@@ -483,7 +508,7 @@ async def grade_essay_file(
         "general_feedback": result.general_feedback,
         "detailed_analysis": result.feedback_json,
         "created_at": result.created_at,
-        "document_filename": result.document.filename if result.document else "Unknown Document"
+        "document_filename": result.document.title if result.document else "Unknown Document"
     }
 
 
@@ -516,7 +541,7 @@ def grade_essay(
         "general_feedback": result.general_feedback,
         "detailed_analysis": result.feedback_json,
         "created_at": result.created_at,
-        "document_filename": result.document.filename if result.document else "Unknown Document"
+        "document_filename": result.document.title if result.document else "Unknown Document"
     }
 
 
@@ -535,7 +560,7 @@ def list_essays(
             "general_feedback": e.general_feedback,
             "detailed_analysis": e.feedback_json,
             "created_at": e.created_at,
-            "document_filename": e.document.filename if e.document else "Unknown Document"
+            "document_filename": e.document.title if e.document else "Unknown Document"
         }
         for e in essays
     ]
@@ -559,7 +584,7 @@ def get_essay_detail(
         "general_feedback": essay.general_feedback,
         "detailed_analysis": essay.feedback_json,  
         "created_at": essay.created_at,
-        "document_filename": essay.document.filename if essay.document else "Unknown Document"
+        "document_filename": essay.document.title if essay.document else "Unknown Document"
     }
 
 

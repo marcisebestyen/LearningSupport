@@ -5,6 +5,7 @@ from typing import List, Literal
 
 class DocumentBase(BaseModel):
     filename: str
+    title: str | None = None
     content: str
     summary: str | None = None
     category: str | None = None
@@ -29,6 +30,10 @@ class DocumentResponse(DocumentBase):
         data = super().from_orm(obj)
         data.has_audio = bool(obj.google_drive_id)
         return data
+
+
+class DocumentTitleUpdate(BaseModel):
+    title: str
 
 
 class ChatRequest(BaseModel):
