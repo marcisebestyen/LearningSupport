@@ -12,7 +12,7 @@
       <div class="quiz-card" [class.passed]="quiz.passed">
 
         <div class="card-header">
-          <h3>{{ quiz.document.filename }}</h3>
+          <h3>{{ quiz.document.title || quiz.document.filename }}</h3>
           <span class="badge" [class.success]="quiz.passed">
             {{ quiz.passed ? 'PASSED' : 'IN PROGRESS' }}
           </span>

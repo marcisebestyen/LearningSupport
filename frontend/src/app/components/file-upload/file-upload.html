@@ -41,6 +41,21 @@
         <hr class="divider">
 
         <div class="input-section">
+          <label>📝 Document Title (Optional)</label>
+          <p class="helper-text">
+            Give your document a friendly name for easier finding in your history.
+          </p>
+          <div class="input-group">
+            <input
+              type="text"
+              [ngModel]="documentTitle()"
+              (ngModelChange)="documentTitle.set($event)"
+              placeholder="e.g. 'Biology Midterm Notes'"
+            >
+          </div>
+        </div>
+
+        <div class="input-section">
           <label>🎯 Study Focus (Optional)</label>
           <p class="helper-text">
             Uploading a whole book? Tell the AI which chapter or topic to summarize.
@@ -79,7 +94,7 @@
         </div>
 
         <div class="actions">
-          <button class="secondary-btn" (click)="selectedFile.set(null)" [disabled]="isLoading()">
+          <button class="secondary-btn" (click)="cancelUpload()" [disabled]="isLoading()">
             Cancel
           </button>
 
@@ -91,5 +106,4 @@
       </div>
     </div>
   }
-
 </div>

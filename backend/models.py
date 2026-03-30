@@ -22,6 +22,7 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, nullable=False)
+    title = Column(String, nullable=True)
     upload_date = Column(DateTime(timezone=True), server_default=func.now())
     content = Column(Text, nullable=False)
     summary = Column(Text, nullable=True)
@@ -61,7 +62,7 @@ class EssaySubmission(Base):
     @property
     def document_filename(self):
         if self.document:
-            return self.document.filename
+            return self.document.title if self.document.title else self.document.filename
         return "Unknown Document"
 
 

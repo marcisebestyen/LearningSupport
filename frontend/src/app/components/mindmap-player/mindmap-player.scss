@@ -1,21 +1,30 @@
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$bg-dark: #121212;
+$bg-header: #1e1e1e;
+$bg-node: #252526;
+$border-color: #333;
+$primary-color: #667eea;
+
 .player-layout {
   display: flex;
   flex-direction: column;
-  height: 83.75vh;
+  height: 100vh;
   width: 100%;
-  background-color: #121212;
+  background-color: $bg-dark;
   color: #e0e0e0;
   overflow: hidden;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #333;
-  background-color: #1e1e1e;
+  padding: clamp(1rem, 3vw, 1.5rem) clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid $border-color;
+  background-color: $bg-header;
   z-index: 10;
+  gap: 20px;
 
   .exit-btn {
     background: transparent;
@@ -29,6 +38,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 
     &:hover {
       background: rgba(239, 83, 80, 0.1);
@@ -42,6 +52,14 @@
     color: #888;
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    text-align: right;
+
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -49,15 +67,15 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at center, #1e1e1e 0%, #121212 90%);
+  background: radial-gradient(circle at center, #1e1e1e 0%, $bg-dark 90%);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .loading {
-  color: #667eea;
-  font-size: 1.2rem;
+  color: $primary-color;
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
   font-weight: 500;
   animation: pulse 1.5s infinite;
 }
@@ -66,11 +84,15 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  padding: 2rem;
+  padding: clamp(1rem, 4vw, 2rem);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &::-webkit-scrollbar { width: 8px; height: 8px; }
+  &::-webkit-scrollbar-corner { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
 
   .mermaid-content {
     width: 100%;
@@ -80,7 +102,7 @@
     ::ng-deep svg {
       max-width: 100%;
       height: auto;
-      max-height: 80vh;
+      max-height: clamp(60vh, 80vh, 90vh);
     }
   }
 }
@@ -88,14 +110,25 @@
 ::ng-deep .node rect,
 ::ng-deep .node circle,
 ::ng-deep .node polygon {
-  fill: #252526 !important;
-  stroke: #667eea !important;
+  fill: $bg-node !important;
+  stroke: $primary-color !important;
   stroke-width: 2px !important;
+  transition: all 0.2s ease-out;
+}
+
+::ng-deep .node:hover rect,
+::ng-deep .node:hover circle,
+::ng-deep .node:hover polygon {
+  stroke: #764ba2 !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.4));
+  cursor: pointer;
 }
 
 ::ng-deep .node .label {
   color: #fff !important;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-weight: 500;
 }
 
 ::ng-deep .edgePath .path {
@@ -103,4 +136,15 @@
   stroke-width: 2px !important;
 }
 
-@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+::ng-deep .edgeLabel {
+  background-color: $bg-node !important;
+  color: #ccc !important;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}

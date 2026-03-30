@@ -98,9 +98,12 @@ class DocumentService:
             return "Hiba történt az összefoglaló generálása közben."
 
 
-    def save_document(self, db: Session, filename: str, content: str, summary: str, user_id: int, category: str = None, study_focus: str = None):
+    def save_document(self, db: Session, filename: str, content: str, summary: str, user_id: int, category: str = None, study_focus: str = None, title: str = None):
+        display_title = title if title and title.strip() else filename
+
         new_doc = models.Document(
             filename=filename,
+            title=display_title,
             content=content,
             summary=summary,
             owner_id=user_id,
@@ -444,7 +447,7 @@ class QuizService:
             results.append({
                 "id": fset.id,
                 "created_at": fset.created_at,
-                "document_filename": fset.document.filename,
+                "document_filename": fset.document.title if fset.document.title else fset.document.filename,
                 "card_count": len(fset.cards),
             })
         return results
@@ -749,7 +752,7 @@ class MindMapService:
                 "id": m.id,
                 "mermaid_script": m.mermaid_script,
                 "created_at": m.created_at,
-                "document_filename": m.document.filename if m.document.filename else "Unknown File",
+                "document_filename": m.document.title if m.document.title else "Unknown File",
                 "document_id": m.document.id,
             })
         return results
@@ -986,7 +989,7 @@ class StudyPlanService:
             results.append({
                 "id": p.document.id,
                 "plan_id": p.id,
-                "filename": p.document.filename,
+                "filename": p.document.title if p.document.title else p.document.filename,
                 "study_focus": p.document.study_focus,
                 "created_at": p.created_at,
                 "total_days": total_days,

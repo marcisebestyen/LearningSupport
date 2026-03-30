@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {setThrowInvalidWriteToSignalError} from '@angular/core/primitives/signals';
 
 @Injectable({
   providedIn: 'root',
@@ -29,7 +30,7 @@ export class HttpRequestService {
 
   // document services
 
-  uploadFileRequest(file: File, category: string, studyFocus: string, force: boolean) {
+  uploadFileRequest(file: File, category: string, studyFocus: string, force: boolean, title: string) {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -45,6 +46,10 @@ export class HttpRequestService {
       formData.append('force_upload', 'true');
     }
 
+    if (title) {
+      formData.append('title', title);
+    }
+
     return this.http.post<any>(`${this.baseUrl}/upload`, formData, { headers: this.getHeaders() });
   }
 
@@ -54,6 +59,10 @@ export class HttpRequestService {
 
   deleteDocRequest(item: any) {
     return this.http.delete(`${this.baseUrl}/documents/${item.id}`, { headers: this.getHeaders() });
+  }
+
+  updateDocumentTitleRequest(docId: number, newTitle: string) {
+    return this.http.patch(`${this.baseUrl}/documents/${docId}/title`, { title: newTitle }, { headers: this.getHeaders() });
   }
 
   // quiz services

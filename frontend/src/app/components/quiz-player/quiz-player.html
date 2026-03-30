@@ -24,11 +24,9 @@
               <p class="fail-msg">❌ You need 5 points to pass. Keep studying!</p>
             }
           }
-
-          <button class="primary-btn" (click)="backToMenu()">Back to Quizzes</button>
         </div>
 
-        @if (score()! >= 5) {
+        @if (score()! >= 5 || isReviewMode()) {
           <div class="review-section">
             <h3>{{ isReviewMode() ? 'Correct Answer Key' : 'Review Your Answers' }}</h3>
 
@@ -57,14 +55,22 @@
             }
           </div>
         }
+
+        <div style="margin-top: 2rem; display: flex; justify-content: center;">
+          <button class="primary-btn" (click)="backToMenu()">Back to Quizzes</button>
+        </div>
+
       </div>
     }
 
     @else {
       @if (quizData(); as quiz) {
         <div class="quiz-container">
+
           <div class="header">
-            <span>Question {{ currentQuestionIndex() + 1 }} of {{ quiz.questions.length }}</span>
+            <div class="progress-info">
+              <span>Question {{ currentQuestionIndex() + 1 }} of {{ quiz.questions.length }}</span>
+            </div>
             <div class="progress-bar">
               <div class="fill" [style.width.%]="((currentQuestionIndex() + 1) / quiz.questions.length) * 100"></div>
             </div>
@@ -93,6 +99,7 @@
               <button class="next-btn" (click)="nextQuestion()">Next</button>
             }
           </div>
+
         </div>
       }
     }
