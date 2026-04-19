@@ -7,7 +7,7 @@ $text-dim: #888;
 
 .history-layout {
   display: flex;
-  height: 100vh;
+  height: 83.75vh;
   width: 100%;
   background-color: $bg-layout;
   overflow: hidden;
@@ -17,7 +17,7 @@ $text-dim: #888;
 }
 
 .history-sidebar {
-  width: clamp(250px, 25vw, 320px);
+  width: 300px;
   background-color: $bg-sidebar;
   border-right: 1px solid $border-color;
   display: flex;
@@ -26,7 +26,7 @@ $text-dim: #888;
   height: 100%;
 
   .sidebar-header {
-    padding: clamp(1rem, 3vw, 1.5rem);
+    padding: 1.5rem;
     border-bottom: 1px solid $border-color;
 
     h3 {
@@ -38,7 +38,7 @@ $text-dim: #888;
   }
 
   .filter-container {
-    padding: 1rem clamp(1rem, 3vw, 1.5rem);
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid $border-color;
 
     select {
@@ -97,7 +97,7 @@ $text-dim: #888;
       background: $bg-card;
       border-color: #444;
       color: #fff;
-      transform: translateX(4px);
+      transform: translateX(2px);
 
       .delete-btn {
         opacity: 1;
@@ -139,7 +139,7 @@ $text-dim: #888;
       .date {
         font-size: 0.75rem;
         color: #666;
-        margin-top: 4px;
+        margin-top: 2px;
         display: block;
       }
     }
@@ -191,7 +191,7 @@ $text-dim: #888;
 
 .main-header {
   flex-shrink: 0;
-  padding: clamp(1rem, 3vw, 1.5rem) clamp(1.5rem, 5vw, 3rem);
+  padding: 1.5rem 3rem;
   border-bottom: 1px solid $border-color;
   display: flex;
   justify-content: space-between;
@@ -217,6 +217,7 @@ $text-dim: #888;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      max-width: 600px;
     }
 
     .edit-title-btn {
@@ -296,70 +297,70 @@ $text-dim: #888;
       }
     }
   }
-}
 
-.view-toggle {
-  background: $bg-card;
-  padding: 4px;
-  border-radius: 8px;
-  display: flex;
-  gap: 4px;
-  border: 1px solid $border-color;
-  flex-shrink: 0;
-  flex-wrap: wrap;
+  .view-toggle {
+    background: $bg-card;
+    padding: 4px;
+    border-radius: 8px;
+    display: flex;
+    gap: 4px;
+    border: 1px solid $border-color;
+    flex-shrink: 0;
+    flex-wrap: wrap;
 
-  button {
-    background: transparent;
-    border: none;
-    color: $text-dim;
-    padding: 8px clamp(10px, 2vw, 16px);
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    border: 1px solid transparent;
+    button {
+      background: transparent;
+      border: none;
+      color: $text-dim;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border: 1px solid transparent;
 
-    &:hover:not(.active) {
-      color: #ccc;
-      background: rgba(255, 255, 255, 0.05);
+      &:hover:not(.active) {
+        color: #ccc;
+        background: rgba(255, 255, 255, 0.05);
+      }
     }
-  }
 
-  .summary-btn {
-    &.active {
-      background-color: #27ae60 !important;
-      color: white !important;
-      box-shadow: 0 2px 8px rgba(39, 174, 96, 0.4);
+    .summary-btn {
+      &.active {
+        background-color: #27ae60 !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(39, 174, 96, 0.4);
+      }
+      &:hover:not(.active) { border-color: #27ae60; color: #27ae60; }
     }
-    &:hover:not(.active) { border-color: #27ae60; color: #27ae60; }
-  }
 
-  .grader-btn {
-    &.active {
-      background-color: #e67e22 !important;
-      color: white !important;
-      box-shadow: 0 2px 8px rgba(230, 126, 34, 0.4);
+    .grader-btn {
+      &.active {
+        background-color: #e67e22 !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(230, 126, 34, 0.4);
+      }
+      &:hover:not(.active) { border-color: #e67e22; color: #e67e22; }
     }
-    &:hover:not(.active) { border-color: #e67e22; color: #e67e22; }
-  }
 
-  .chat-btn {
-    &.active {
-      background-color: #2980b9 !important;
-      color: white !important;
-      box-shadow: 0 2px 8px rgba(41, 128, 185, 0.4);
+    .chat-btn {
+      &.active {
+        background-color: #2980b9 !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(41, 128, 185, 0.4);
+      }
+      &:hover:not(.active) { border-color: #2980b9; color: #2980b9; }
     }
-    &:hover:not(.active) { border-color: #2980b9; color: #2980b9; }
-  }
 
-  .tutor-btn {
-    &.active {
-      background-color: #9b59b6 !important;
-      color: white !important;
-      box-shadow: 0 2px 8px rgba(155, 89, 182, 0.4);
+    .tutor-btn {
+      &.active {
+        background-color: #9b59b6 !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(155, 89, 182, 0.4);
+      }
+      &:hover:not(.active) { border-color: #9b59b6; color: #9b59b6; }
     }
-    &:hover:not(.active) { border-color: #9b59b6; color: #9b59b6; }
   }
 }
 
@@ -373,7 +374,7 @@ $text-dim: #888;
 }
 
 .summary-container {
-  padding: clamp(1rem, 4vw, 2rem) clamp(5%, 10vw, 10%);
+  padding: 2rem 10%;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
@@ -485,7 +486,7 @@ $text-dim: #888;
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: clamp(1rem, 4vw, 2rem) clamp(5%, 10vw, 10%);
+  padding: 2rem 10%;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -572,7 +573,7 @@ $text-dim: #888;
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
 .chat-input-area {
-  padding: clamp(1rem, 3vw, 1.5rem) clamp(5%, 10vw, 10%);
+  padding: 1.5rem 10%;
   background-color: #1e1e1e;
   border-top: 1px solid #333;
   flex-shrink: 0;
@@ -627,10 +628,11 @@ $text-dim: #888;
   }
 }
 
+// --- ESSAY / GRADER VIEW ---
 .essay-container {
   height: 100%;
   overflow-y: auto;
-  padding: clamp(1.5rem, 5vw, 2rem) clamp(5%, 10vw, 10%);
+  padding: 2rem 10%;
   box-sizing: border-box;
   padding-bottom: 150px;
 }

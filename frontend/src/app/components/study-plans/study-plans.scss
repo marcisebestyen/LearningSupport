@@ -149,7 +149,8 @@ $primary-color: #667eea;
 .plan-dashboard {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .plan-header {
@@ -198,7 +199,8 @@ $primary-color: #667eea;
   display: flex;
   flex: 1;
   overflow: hidden;
-  flex-wrap: wrap;
+  min-height: 0;
+  //flex-wrap: wrap;
 }
 
 .timeline-col {
@@ -281,7 +283,8 @@ $primary-color: #667eea;
 }
 
 .activity-col {
-  flex: 1 1 400px; // Will take remaining space, but wrap if screen is < 400px
+  flex: 1 1 400px;
+  min-height: 0;
   background: #141414;
   padding: clamp(1.5rem, 4vw, 2.5rem);
   overflow-y: auto;
@@ -306,6 +309,10 @@ $primary-color: #667eea;
   border: 1px solid $border-color;
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 
+  display: flex;
+  flex-direction: column;
+  max-height: 50vh;
+
   h3 {
     margin-top: 0;
     color: #ccc;
@@ -316,7 +323,17 @@ $primary-color: #667eea;
   }
 }
 
-.task-list { list-style: none; padding: 0; margin: 0; }
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  overflow-y: auto;
+  padding-right: 10px; 
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+}
 
 .task-item {
   padding: 12px 0;

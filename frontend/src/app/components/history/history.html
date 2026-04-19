@@ -84,6 +84,7 @@
       </div>
 
       <div class="content-body">
+
         @if (activeTab() === 'summary') {
           <div class="summary-container fade-in">
             <div class="markdown-body">
@@ -110,6 +111,127 @@
                 @if (isGeneratingQuiz()) { <div class="spinner"></div> Generating... }
                 @else { <span>✨</span> Generate Quiz }
               </button>
+            </div>
+          </div>
+        }
+
+        @if (activeTab() === 'chat' || activeTab() === 'tutor') {
+          <div class="chat-wrapper fade-in">
+            @if (activeTab() === 'tutor') {
+              <div class="tutor-banner">
+                <span>🎓 <b>Socratic Mode:</b> I will ask the questions. You give the answers!</span>
+              </div>
+            }
+
+            <div class="chat-messages" #scrollContainer>
+              @if(chatMessages().length === 0 && !isChatLoading()) {
+                <div class="chat-empty">
+                  @if(activeTab() === 'tutor') {
+                    <p>Starting session...</p>
+                  } @else {
+                    <p>Ask a question about this document to get started!</p>
+                  }
+                </div>
+              }
+
+              @for (msg of chatMessages(); track $index) {
+                <div class="msg-row" [class.user]="msg.role === 'user'">
+                  <div class="msg-bubble" [class.status-correct]="msg.status === 'correct'"
+                       [class.status-incorrect]="msg.status === 'incorrect'">
+                    <div class="sender">
+                      {{ msg.role === 'user' ? 'You' : (activeTab() === 'tutor' ? 'Socratic Tutor' : 'AI Assistant') }}
+                    </div>
+                    <markdown [data]="msg.text"></markdown>
+                  </div>
+                </div>
+              }
+
+              @if (isChatLoading()) {
+                <div class="msg-row ai">
+                  <div class="msg-bubble loading">
+                    <span>Thinking...</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="chat-input-area">
+              <div class="input-box">
+                <input [(ngModel)]="chatInput" (keyup.enter)="!sessionFinished() && sendMessage()"
+                       [placeholder]="sessionFinished() ? 'Session Finished. Refresh to start over.' : (activeTab() === 'tutor' ? 'Type your answer here...' : 'Ask a question...')"
+                       [disabled]="isChatLoading() || sessionFinished()">
+                @if (sessionFinished()) {
+                  <button class="restart-btn" (click)="restartTutor()">
+                    🔄 Restart
+                  </button>
+                } @else {
+                  <button (click)="sendMessage()" [disabled]="!chatInput() || isChatLoading()">
+                    Send
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (activeTab() === 'grader') {
+          <div class="essay-container fade-in">
+            <div class="essay-input-wrapper">
+
+              <div class="header-text" style="text-align:center; margin-bottom: 20px;">
+                <h3>Submit Essay for Grading</h3>
+                <p style="color:#aaa">Upload your work or type it below. The AI will analyze it against this document.</p>
+              </div>
+
+              <div class="mode-toggle">
+                <button [class.active]="essayInputMode() === 'type'" (click)="essayInputMode.set('type')">✍️ Type Manually</button>
+                <button [class.active]="essayInputMode() === 'upload'" (click)="essayInputMode.set('upload')">📂 Upload File</button>
+              </div>
+
+              @if (essayInputMode() === 'type') {
+                <textarea [(ngModel)]="essayText" placeholder="Write or paste your essay here..."></textarea>
+              }
+
+              @if (essayInputMode() === 'upload') {
+                @if (!essayFile()) {
+                  <div class="drop-zone" appDragDrop (fileDropped)="onFileDropped($event)">
+                    <div class="icon">☁️</div>
+                    <h3>Drag & Drop File</h3>
+                    <p>PDF or Word (.docx)</p>
+
+                    <label for="essayFileInput" class="browse-btn">Browse Computer</label>
+                    <input
+                      type="file"
+                      id="essayFileInput"
+                      (change)="onEssayFileSelected($event)"
+                      accept=".pdf, .docx"
+                      hidden
+                    >
+                  </div>
+                } @else {
+                  <div class="file-preview-card fade-in">
+                    <div class="file-info">
+                      <span class="file-icon">📄</span>
+                      <div class="file-details">
+                        <span class="file-name">{{ essayFile()?.name }}</span>
+                        <span class="file-size">{{ (essayFile()?.size || 0) / 1024 | number:'1.0-2' }} KB</span>
+                      </div>
+                    </div>
+
+                    <button class="remove-file-btn" (click)="removeEssayFile()" [disabled]="isGrading()">
+                      ✕ Remove
+                    </button>
+                  </div>
+                }
+              }
+
+              <div class="submit-area">
+                <button class="grade-btn" (click)="submitEssay()" [disabled]="isGrading()">
+                  @if(isGrading()) { <div class="spinner"></div> Grading... }
+                  @else { 🎓 Grade My Essay }
+                </button>
+              </div>
+
             </div>
           </div>
         }
